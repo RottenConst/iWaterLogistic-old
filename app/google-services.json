@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "688663406956",
+    "firebase_url": "https://iwater-logistic.firebaseio.com",
+    "project_id": "iwater-logistic",
+    "storage_bucket": "iwater-logistic.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:688663406956:android:b695f758b374374d",
+        "android_client_info": {
+          "package_name": "ru.iwater.yourwater.iwaterlogistic"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "688663406956-l8skc0cma8jg9oobfcd451te065dk4c7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "ru.iwater.yourwater.iwaterlogistic",
+            "certificate_hash": "cc0a7aa3f8cbac0dfcf125067d395501a43c18ff"
+          }
+        },
+        {
+          "client_id": "688663406956-lc8hp45tsl3pau89g1i7rvptabt3h5lh.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC6DcRk2XaR6jY2k97WcCMX2qGalfKYK8"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "688663406956-lc8hp45tsl3pau89g1i7rvptabt3h5lh.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/pickerContainer"
+    android:background="@color/white"
+    tools:context=".ui.activities.ShipmentData">
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        android:indeterminateDrawable="@drawable/progress_bar"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_marginLeft="70dp"
+            android:layout_marginRight="70dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/address"
+                android:layout_marginTop="80dp"
+                android:textColor="@color/linesAndText"
+                android:textSize="22sp"
+                android:gravity="center"
+                android:layout_marginBottom="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/line"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/linesAndText" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/tanksIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_tank" />
+
+                <TextView
+                    style="@style/wayListsText"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/tanks"
+                    android:textSize="22sp"
+                    android:text="@string/tanks"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical">
+
+                    <EditText
+                        android:id="@+id/editText2"
+                        android:layout_width="70dp"
+                        android:layout_height="wrap_content"
+                        android:ems="10"
+                        android:textSize="22sp"
+                        android:textColor="@color/black"
+                        android:inputType="number"
+                        android:gravity="center_horizontal"
+                        android:layout_marginLeft="10dp"
+                        android:maxLength="3"
+                        android:background="@color/transperent" />
+
+                    <TextView
+                        android:id="@+id/textView21"
+                        android:layout_width="70dp"
+                        android:layout_height="1dp"
+                        android:layout_marginLeft="10dp"
+                        android:background="@color/linesAndText" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:id="@+id/driverCommIcon"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_driver_comment" />
+
+                <TextView
+                    style="@style/wayListsText"
+                    android:layout_gravity="center_vertical"
+                    android:id="@+id/driverComment"
+                    android:textSize="22sp"
+                    android:text="@string/note"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
+
+
+            </LinearLayout>
+
+            <EditText
+                android:id="@+id/editText"
+                android:layout_marginTop="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/text_area"
+                android:ems="10"
+                android:lines="12"
+                android:maxLength="127"
+                android:textSize="22sp"
+                android:textColor="@color/black"
+                android:inputType="textMultiLine" />
+
+            <TextView
+                android:id="@+id/textView14"
+                android:textSize="24sp"
+                android:layout_marginTop="40dp"
+                android:layout_gravity="center_horizontal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/shipmentText"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/shipment"
+                android:layout_marginTop="50dp"
+                android:layout_marginBottom="20dp"
+                android:layout_gravity="center_horizontal"
+                android:background="@drawable/gradient_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/white"
+                android:textSize="22sp"
+                android:text="@string/confirmOrder" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <TextView
+        android:id="@+id/textView27"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_gravity="bottom"
+        android:visibility="gone"
+        android:gravity="center"
+        android:background="@color/shipmentBackground"
+        android:textColor="@color/shipmentText"
+        android:textSize="14sp"
+        android:text="@string/emptyField" />
+</FrameLayout>

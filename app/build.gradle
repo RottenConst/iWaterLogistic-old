@@ -1,0 +1,66 @@
+apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+
+android {
+    signingConfigs {
+        release {
+            storeFile file('D:\\android project\\iWaterLogistic-master\\iWaterKey.jks')
+            storePassword password
+            keyAlias Alias
+            keyPassword Key
+        }
+    }
+    compileSdkVersion 29
+    defaultConfig {
+        applicationId "ru.iwater.yourwater.iwaterlogistic"
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 21
+        versionName "2.0.9"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        signingConfig signingConfigs.release
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+repositories {
+    maven {
+        url "http://maven.google.com/"
+    }
+    mavenCentral()
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
+
+    implementation 'com.google.firebase:firebase-messaging:20.0.0'
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+    testImplementation 'junit:junit:4.13-beta-3'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    implementation 'com.google.android.material:material:1.2.1'
+    implementation files('libs/ksoap2-android-assembly-3.6.2-jar-with-dependencies.jar')
+    implementation 'com.yandex.android:mapkit:3.3.1'
+    implementation 'com.neovisionaries:nv-websocket-client:2.9'
+    implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation 'com.google.maps.android:android-maps-utils:2.0.3'
+}
+
+apply plugin: 'com.google.gms.google-services'

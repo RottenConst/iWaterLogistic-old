@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+        <item
+            android:id="@+id/waysList"
+            android:title="@string/waysList"
+            android:icon="@drawable/ic_grey_bill" />
+
+        <item
+            android:id="@+id/orders"
+            android:title="@string/orders"
+            android:icon="@drawable/ic_grey_orders" />
+        <item
+            android:id="@+id/history"
+            android:title="@string/history"
+            android:icon="@drawable/ic_grey_notification"/>
+</menu>
