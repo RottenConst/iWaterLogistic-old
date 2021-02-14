@@ -16,23 +16,22 @@ import android.widget.Toast;
 import org.ksoap2.serialization.SoapObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
+import ru.iwater.yourwater.iwaterlogistic.domain.OldOrder;
+import ru.iwater.yourwater.iwaterlogistic.domain.Order;
+import ru.iwater.yourwater.iwaterlogistic.remote.DriverWayBill;
 import ru.iwater.yourwater.iwaterlogistic.utils.Check;
 import ru.iwater.yourwater.iwaterlogistic.utils.Diagonal;
 import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
-import ru.iwater.yourwater.iwaterlogistic.remote.WayBill;
 
 public class FragmentCompleteWayList extends Fragment {
-    private WayBill wayBill;//путевой лист на определённую дату
+    private DriverWayBill wayBill;//путевой лист на определённую дату
     private SoapObject wayBillData;//данные этого путевого листа
     private String session="";//ключ сессии
     //массивы для содержания строки заказа
-    private ArrayList<String> ID;
-    private ArrayList<String> DATE;
-    private ArrayList<String> PERIOD;
-    private ArrayList<String> ADDRESS;
-    private ArrayList<String> STATUS;
+    private List<OldOrder> oldOrders;
     private LinearLayout activeOrders;//незавершённые заказы
     private LinearLayout complitOrders;//завершённые заказы
     //надписи в случае отсутствия заказов
@@ -78,7 +77,7 @@ public class FragmentCompleteWayList extends Fragment {
         if(Check.checkInternet(getContext())) {
             if(Check.checkServer(getContext())) {
                 try {
-                    wayBill = new WayBill(session, id);
+                    wayBill = new DriverWayBill(session, id);
                     wayBill.execute();
                     wayBillData = wayBill.get();
                 } catch (Exception e) {
@@ -94,45 +93,52 @@ public class FragmentCompleteWayList extends Fragment {
         }
         //endregion
         //region заполнение массивов
-        ID = new ArrayList<String>();
-        DATE = new ArrayList<String>();
-        PERIOD = new ArrayList<String>();
-        ADDRESS = new ArrayList<String>();
-        STATUS = new ArrayList<String>();
+        oldOrders = new ArrayList<>();
+
+        String idOrder;
+        String dateOrder;
+        String periodOrder;
+        String addressOrder;
+        String statusOrder;
 
         if (wayBillData != null) {
-            int i=0,j=0,k=0,l=0,h=0;
-            for (int f = 0; f < wayBillData.getPropertyCount()/5; f++) {
-                if (!wayBillData.getPropertyAsString(i).equals("anyType{}"))
-                    ID.add(wayBillData.getPropertyAsString(i));
+            List<OldOrder> rawOldOrder = new ArrayList<>();
+            int id = 0, date = 0, period = 0, address = 0, status = 0;
+            for (int f = 0; f < wayBillData.getPropertyCount()/13; f++) {
+                if (!wayBillData.getPropertyAsString(id).equals("anyType{}"))
+                    idOrder = wayBillData.getPropertyAsString(id);
                 else
-                    ID.add("");
-                if (!wayBillData.getPropertyAsString(j + 1).equals("anyType{}"))
-                    DATE.add(wayBillData.getPropertyAsString(j + 1).replaceAll("/+","\\."));
+                    idOrder = "";
+                if (!wayBillData.getPropertyAsString(date + 8).equals("anyType{}"))
+                    dateOrder = wayBillData.getPropertyAsString(date + 8).replaceAll("/+","\\.");
                 else
-                    DATE.add("");
-                if (!wayBillData.getPropertyAsString(k + 2).equals("anyType{}"))
-                    PERIOD.add(wayBillData.getPropertyAsString(k + 2));
+                    dateOrder = "";
+                if (!wayBillData.getPropertyAsString(period + 9).equals("anyType{}"))
+                    periodOrder = wayBillData.getPropertyAsString(period + 9);
                 else
-                    PERIOD.add("");
-                if (!wayBillData.getPropertyAsString(l + 3).equals("anyType{}"))
-                    ADDRESS.add(wayBillData.getPropertyAsString(l + 3));
+                    periodOrder = "";
+                if (!wayBillData.getPropertyAsString(address + 10).equals("anyType{}"))
+                    addressOrder = wayBillData.getPropertyAsString(address + 10);
                 else
-                    ADDRESS.add("");
-                if (!wayBillData.getPropertyAsString(h + 4).equals("anyType{}"))
-                    STATUS.add(wayBillData.getPropertyAsString(h + 4));
+                    addressOrder = "";
+                if (!wayBillData.getPropertyAsString(status + 12).equals("anyType{}"))
+                    statusOrder = wayBillData.getPropertyAsString(status + 12);
                 else
-                    STATUS.add("");
-                i += 5;
-                j += 5;
-                k += 5;
-                l += 5;
-                h += 5;
+                    statusOrder = "";
+
+                rawOldOrder.add(new OldOrder(idOrder, dateOrder, periodOrder, addressOrder, statusOrder));
+
+                id += 13;
+                date += 13;
+                period += 13;
+                address += 13;
+                status += 13;
             }
+           oldOrders = duplicateOrder(rawOldOrder);
         }
         //endregion
 
-        if(ID != null) {
+        if(oldOrders != null) {
             float scale = getResources().getDisplayMetrics().density;//разрешение экрана
             //размеры////////////////////////////////////////////////////////////////////////////
             float textSize = 0;
@@ -153,8 +159,8 @@ public class FragmentCompleteWayList extends Fragment {
             }
 
             int c=0,a=0;//счётчики
-            for (int i=0; i<ID.size(); i++) {
-                if (STATUS.get(i).equals("0")) {
+            for (int i=0; i<oldOrders.size(); i++) {
+                if (oldOrders.get(i).getStatus().equals("0")) {
 
                     //region строка незавершённого заказа
                     LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, _50dp);
@@ -178,7 +184,7 @@ public class FragmentCompleteWayList extends Fragment {
                     text.setTextColor(Color.BLACK);
                     text.setLayoutParams(textParams);
                     text.setMaxLines(1);
-                    text.setText("№ " + ID.get(i)+", "+DATE.get(i)+", "+PERIOD.get(i)+", "+ADDRESS.get(i));
+                    text.setText("№ " + oldOrders.get(i).getId()+", "+oldOrders.get(i).getDate()+", "+oldOrders.get(i).getPeriod()+", "+oldOrders.get(i).getAddress());
                     //endregion
 
                     activeRow.addView(text);
@@ -186,7 +192,7 @@ public class FragmentCompleteWayList extends Fragment {
                     activeOrders.addView(activeRow);
 
                     a++;
-                } else if (STATUS.get(i).equals("1")) {
+                } else if (oldOrders.get(i).getStatus().equals("1")) {
 
                     //region строка завершённого заказа
                     LinearLayout.LayoutParams rowCompParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, _50dp);
@@ -209,7 +215,7 @@ public class FragmentCompleteWayList extends Fragment {
                     textComp.setTextColor(Color.BLACK);
                     textComp.setLayoutParams(textCompParams);
                     textComp.setMaxLines(1);
-                    textComp.setText("№ " + ID.get(i)+", "+DATE.get(i)+", "+PERIOD.get(i)+", "+ADDRESS.get(i));
+                    textComp.setText("№ " + oldOrders.get(i).getId()+", "+oldOrders.get(i).getDate()+", "+oldOrders.get(i).getPeriod()+", "+oldOrders.get(i).getAddress());
                     //endregion
 
                     complitRow.addView(textComp);
@@ -226,6 +232,40 @@ public class FragmentCompleteWayList extends Fragment {
         }
 
         return v;
+    }
+
+    private List<OldOrder> duplicateOrder(List<OldOrder> oldOrders) {
+        sortOrder(oldOrders);
+
+        List<OldOrder> sortOrder = new ArrayList<>();
+        for (int i = 0; i < oldOrders.size() - 1; i++) {
+            if(!oldOrders.get(i).getId().equals(oldOrders.get(i+1).getId())) {
+                sortOrder.add(oldOrders.get(i));
+            }
+        }
+        sortOrder.add(oldOrders.get(oldOrders.size() - 1));
+
+        return sortOrder;
+    }
+
+    private void sortOrder(List<OldOrder> orders) {
+        boolean sorted = false;
+        OldOrder order;
+        while (!sorted) {
+            sorted = true;
+            for (int i = 0; i < orders.size() - 1; i++){
+                if (Integer.parseInt(orders.get(i).getId()) > Integer.parseInt(orders.get(i +1).getId())){
+                    order = new OldOrder(orders.get(i).getId(),
+                            orders.get(i).getDate(),
+                            orders.get(i).getPeriod(),
+                            orders.get(i).getAddress(),
+                            orders.get(i).getStatus());
+                    orders.set(i, orders.get(i + 1));
+                    orders.set(i + 1, order);
+                    sorted = false;
+                }
+            }
+        }
     }
 
 }

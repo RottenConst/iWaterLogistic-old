@@ -50,7 +50,6 @@ public class CompleteWayList extends AppCompatActivity {
 
         wayLists = (TabLayout) findViewById(R.id.tabLayout1);
         content = (ViewPager) findViewById(R.id.viewPager1);
-
         wayLists.setupWithViewPager(content);
 
         setupContent(content,id);

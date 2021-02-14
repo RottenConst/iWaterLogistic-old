@@ -195,7 +195,6 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
             if (Check.checkServer(context)) {
                 try {
                     //загрузка путевого листа
-//                    Log.d("Order", "session = " + session + " id= " + id);
                     DriverWayBill driverWayBill = new DriverWayBill(session, id);
                     driverWayBill.execute();
 //                    Log.d("ORDER", driverWayBill.get().toString());
@@ -231,12 +230,6 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
 
         List<Order> activeOrder = parseOrder(orders);
 
-        IWaterActivity.beznalCash = 0.0F;
-        IWaterActivity.nalCash = 0.0F;
-//        for (Order order : orders) {
-//            Log.d("Order", "order = " + order.getName() + " period " + order.getPeriod());
-//        }
-        report();
         adapterListOrder = new ListOrderAdapter(getContext(), activeOrder);
         completeAdapterListOrder = new ListOrderAdapter(getContext(), completeOrders);
     }
@@ -349,19 +342,6 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
             }
         }
         return activeOrder;
-    }
-
-    private static void report() {
-        for (Order order : completeOrders) {
-            if (!order.getCash().isEmpty()) {
-                float n = Float.parseFloat(order.getCash());
-                IWaterActivity.nalCash += n;
-            }
-            if (!order.getCash_b().isEmpty()) {
-                float b = Float.parseFloat(order.getCash_b());
-                IWaterActivity.beznalCash += b;
-            }
-        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

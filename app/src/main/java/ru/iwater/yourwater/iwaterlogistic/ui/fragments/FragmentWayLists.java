@@ -92,12 +92,12 @@ public class FragmentWayLists extends Fragment {
 
         View v = inflater.inflate(R.layout.fragment_way_lists, container, false);
 
-        currentWayList = (LinearLayout) v.findViewById(R.id.currentList);
-        complitWayLists = (LinearLayout) v.findViewById(R.id.completeWayLists);
-        currentDate = (TextView) v.findViewById(R.id.textView6);
+        currentWayList = v.findViewById(R.id.currentList);
+        complitWayLists = v.findViewById(R.id.completeWayLists);
+        currentDate = v.findViewById(R.id.textView6);
         if(getActivity() != null)
-            bottomNavigation = (BottomNavigationView) getActivity().findViewById(R.id.bottomNavigation);
-        noWayBill = (TextView) v.findViewById(R.id.textView28);
+            bottomNavigation = getActivity().findViewById(R.id.bottomNavigation);
+        noWayBill = v.findViewById(R.id.textView28);
 
         float scale = getResources().getDisplayMetrics().density;//разрешение экрана
         //размеры////////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-package ru.iwater.yourwater.iwaterlogistic.Receivers;
+  package ru.iwater.yourwater.iwaterlogistic.Receivers;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
@@ -27,7 +27,7 @@ import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
 
 public class TimeNotification extends BroadcastReceiver {
 
-    private final List<NotificationOrder> notifyOrders = new ArrayList<>();
+    private static List<NotificationOrder> notifyOrders = new ArrayList<>();
     private String[] splitPeriod;//разделение временного периода, например 9:00-12:00 по "-"
     private String[] formatedDate;//форматированная дата
     NotificationSender notificationSender;
@@ -51,16 +51,16 @@ public class TimeNotification extends BroadcastReceiver {
             if (SharedPreferencesStorage.checkProperty("waybill" + k)) {
                 id = SharedPreferencesStorage.getProperty("id" + k);
 //                Log.d("notif", "id = " + id);
+                notifyOrders = getNotiyfOrderCount(k);
                 ordersCount = soapToJSON(loadOrders(context)).length();
-                writeToArrays(k);
+                Log.d("notif", "orderCount " + ordersCount + " > notifyOrders " + notifyOrders.size());
+                writeToArrays();
                 if (notifyOrders.get(k) != null) {
 
                     for (int i = 0; i < notifyOrders.size(); i++) {
                         if (notifyOrders.get(i).getStatus().equals("0") && !notifyOrders.get(i).getPeriod().equals("")) {
                             splitPeriod = notifyOrders.get(i).getPeriod().replaceAll("\\s+", "").split("-");
-//                            Log.d("notif", "notyfyOrder " + notifyOrders.size());
                             formatedDate = notifyOrders.get(i).getDate().replaceAll("\\s+", "").split("\\.");
-//                            Log.d("notif", "formatedDate" + Arrays.toString(formatedDate));
                             if (timeDifference(splitPeriod[1], formatedDate) <= 3600 && timeDifference(splitPeriod[1], formatedDate) > 1800) {//за 15 минут
                                 if (!notifyOrders.get(i).notify) {
                                     notificationSender.sendNotification("Через 1 час истекает заказ №" + notifyOrders.get(i).getId(), i, notifyOrders.get(i).getNotify());
@@ -84,22 +84,25 @@ public class TimeNotification extends BroadcastReceiver {
         }
     }
 
-    //парсинг json массива и запись данных в динамические массивы
-    private void writeToArrays(int k) {
+    public List<NotificationOrder> getNotiyfOrderCount(int k) {
         try {
             JSONArray waybill = new JSONArray(SharedPreferencesStorage.getProperty("waybill" + k));
-            if (ordersCount > notifyOrders.size()) {
-                notificationSender.sendNotification("Появились новые заказы, пожалуйста обновите список заказов", 0, false);
-                notifyOrders.clear();
-                for (int j = 0; j < waybill.length(); j++) {
-                    notifyOrders.add(new NotificationOrder(waybill.getJSONObject(j).getString("id"),
-                            waybill.getJSONObject(j).getString("time"),
-                            waybill.getJSONObject(j).getString("status"),
-                            waybill.getJSONObject(j).getString("date")));
-                }
-            } else return;
+            for (int j = notifyOrders.size(); j < waybill.length(); j++) {
+                notifyOrders.add(new NotificationOrder(waybill.getJSONObject(j).getString("id"),
+                        waybill.getJSONObject(j).getString("time"),
+                        waybill.getJSONObject(j).getString("status"),
+                        waybill.getJSONObject(j).getString("date")));
+            }
         } catch (JSONException e) {
-            Log.e("iWaterlogistic/json", "Получено исключение", e);
+            e.printStackTrace();
+        }
+        return notifyOrders;
+    }
+
+    //парсинг json массива и запись данных в динамические массивы
+    private void writeToArrays() {
+        if (ordersCount > notifyOrders.size()) {
+            notificationSender.sendNotification("Появились новые заказы, пожалуйста обновите список заказов", notifyOrders.size() + 100, false);
         }
     }
 
@@ -132,112 +135,112 @@ public class TimeNotification extends BroadcastReceiver {
             if (Check.checkServer(context)) {
                 try {
                     //загрузка путевого листа
-                    Log.d("Order", "session = " + session + " id= " + id);
+//                    Log.d("Order", "session = " + session + " id= " + id);
                     DriverWayBill driverWayBill = new DriverWayBill(session, id);
                     driverWayBill.execute();
-//                    Log.d("notif", "ORDERS INFO = " + driverWayBill.get());
                     return driverWayBill.get();
                 } catch (Exception e) {
                     Log.e("iWater Logistic", "Получено исключение", e);
                 }
             }
         }
-        return null;
+        return new SoapObject();
     }
 
     private JSONArray soapToJSON(SoapObject ordersSoap) {
         JSONArray jsonArrayOrder = new JSONArray();
         int id = 0, name = 0, order = 0, cash = 0, cash_b = 0, time = 0, contact = 0, notice = 0, date = 0, period = 0, address = 0, coords = 0, status = 0;
-        for (int f = 0; f < ordersSoap.getPropertyCount() / 13; f++) {
-            JSONObject jsonObject = new JSONObject();
-            try {
-                jsonObject.put("num", String.valueOf(f + 1));
-                if (!ordersSoap.getPropertyAsString(id).equals("anyType{}"))
-                    jsonObject.put("id", ordersSoap.getPropertyAsString(id));
-                else
-                    jsonObject.put("id", "");
+        if (ordersSoap != null) {
+            for (int f = 0; f < ordersSoap.getPropertyCount() / 13; f++) {
+                JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("num", String.valueOf(f + 1));
+                    if (!ordersSoap.getPropertyAsString(id).equals("anyType{}"))
+                        jsonObject.put("id", ordersSoap.getPropertyAsString(id));
+                    else
+                        jsonObject.put("id", "");
 
-                if (!ordersSoap.getPropertyAsString(name + 1).equals("anyType{}"))
-                    jsonObject.put("name", ordersSoap.getPropertyAsString(name + 1));
-                else
-                    jsonObject.put("name", "");
+                    if (!ordersSoap.getPropertyAsString(name + 1).equals("anyType{}"))
+                        jsonObject.put("name", ordersSoap.getPropertyAsString(name + 1));
+                    else
+                        jsonObject.put("name", "");
 
-                if (!ordersSoap.getPropertyAsString(order + 2).equals("anyType{}"))
-                    jsonObject.put("order", ordersSoap.getPropertyAsString(order + 2));
-                else
-                    jsonObject.put("order", "");
+                    if (!ordersSoap.getPropertyAsString(order + 2).equals("anyType{}"))
+                        jsonObject.put("order", ordersSoap.getPropertyAsString(order + 2));
+                    else
+                        jsonObject.put("order", "");
 
-                if (!ordersSoap.getPropertyAsString(cash + 3).equals("anyType{}"))
-                    jsonObject.put("cash", ordersSoap.getPropertyAsString(cash + 3));
-                else
-                    jsonObject.put("cash", "0.00");
+                    if (!ordersSoap.getPropertyAsString(cash + 3).equals("anyType{}"))
+                        jsonObject.put("cash", ordersSoap.getPropertyAsString(cash + 3));
+                    else
+                        jsonObject.put("cash", "0.00");
 
-                if (!ordersSoap.getPropertyAsString(cash_b + 4).equals("anyType{}"))
-                    jsonObject.put("cash_b", ordersSoap.getPropertyAsString(cash_b + 4));
-                else
-                    jsonObject.put("cash_b", "0.00");
+                    if (!ordersSoap.getPropertyAsString(cash_b + 4).equals("anyType{}"))
+                        jsonObject.put("cash_b", ordersSoap.getPropertyAsString(cash_b + 4));
+                    else
+                        jsonObject.put("cash_b", "0.00");
 
-                if (!ordersSoap.getPropertyAsString(time + 5).equals("anyType{}"))
-                    jsonObject.put("time", ordersSoap.getPropertyAsString(time + 5));
-                else
-                    jsonObject.put("time", "");
+                    if (!ordersSoap.getPropertyAsString(time + 5).equals("anyType{}"))
+                        jsonObject.put("time", ordersSoap.getPropertyAsString(time + 5));
+                    else
+                        jsonObject.put("time", "");
 
-                if (!ordersSoap.getPropertyAsString(contact + 6).equals("anyType{}"))
-                    jsonObject.put("contact", ordersSoap.getPropertyAsString(contact + 6));
-                else
-                    jsonObject.put("contact", "");
+                    if (!ordersSoap.getPropertyAsString(contact + 6).equals("anyType{}"))
+                        jsonObject.put("contact", ordersSoap.getPropertyAsString(contact + 6));
+                    else
+                        jsonObject.put("contact", "");
 
-                if (!ordersSoap.getPropertyAsString(notice + 7).equals("anyType{}"))
-                    jsonObject.put("notice", ordersSoap.getPropertyAsString(notice + 7));
-                else
-                    jsonObject.put("notice", "");
+                    if (!ordersSoap.getPropertyAsString(notice + 7).equals("anyType{}"))
+                        jsonObject.put("notice", ordersSoap.getPropertyAsString(notice + 7));
+                    else
+                        jsonObject.put("notice", "");
 
-                if (!ordersSoap.getPropertyAsString(date + 8).equals("anyType{}"))
-                    jsonObject.put("date", ordersSoap.getPropertyAsString(date + 8).replaceAll("/+", "\\."));
-                else
-                    jsonObject.put("date", "");
+                    if (!ordersSoap.getPropertyAsString(date + 8).equals("anyType{}"))
+                        jsonObject.put("date", ordersSoap.getPropertyAsString(date + 8).replaceAll("/+", "\\."));
+                    else
+                        jsonObject.put("date", "");
 
-                if (!ordersSoap.getPropertyAsString(period + 9).equals("anyType{}"))
-                    jsonObject.put("period", ordersSoap.getPropertyAsString(period + 9));
-                else
-                    jsonObject.put("period", "");
+                    if (!ordersSoap.getPropertyAsString(period + 9).equals("anyType{}"))
+                        jsonObject.put("period", ordersSoap.getPropertyAsString(period + 9));
+                    else
+                        jsonObject.put("period", "");
 
-                if (!ordersSoap.getPropertyAsString(address + 10).equals("anyType{}"))
-                    jsonObject.put("address", ordersSoap.getPropertyAsString(address + 10));
-                else
-                    jsonObject.put("address", "");
+                    if (!ordersSoap.getPropertyAsString(address + 10).equals("anyType{}"))
+                        jsonObject.put("address", ordersSoap.getPropertyAsString(address + 10));
+                    else
+                        jsonObject.put("address", "");
 
-                if (!ordersSoap.getPropertyAsString(coords + 11).equals("anyType{}"))
-                    jsonObject.put("coords", ordersSoap.getPropertyAsString(coords + 11));
-                else
-                    jsonObject.put("coords", "");
+                    if (!ordersSoap.getPropertyAsString(coords + 11).equals("anyType{}"))
+                        jsonObject.put("coords", ordersSoap.getPropertyAsString(coords + 11));
+                    else
+                        jsonObject.put("coords", "");
 
-                if (!ordersSoap.getPropertyAsString(status + 12).equals("anyType{}"))
-                    jsonObject.put("status", ordersSoap.getPropertyAsString(status + 12));
-                else
-                    jsonObject.put("status", "");
+                    if (!ordersSoap.getPropertyAsString(status + 12).equals("anyType{}"))
+                        jsonObject.put("status", ordersSoap.getPropertyAsString(status + 12));
+                    else
+                        jsonObject.put("status", "");
 
-                jsonArrayOrder.put(jsonObject);
+                    jsonArrayOrder.put(jsonObject);
 //                Log.d("FragmentOrders", "ORDERS" + jsonArrayOrder.getString(f));
-                id += 13;
-                name += 13;
-                order += 13;
-                cash += 13;
-                cash_b += 13;
-                time += 13;
-                contact += 13;
-                notice += 13;
-                date += 13;
-                period += 13;
-                address += 13;
-                coords += 13;
-                status += 13;
-            } catch (Exception e) {
-                Log.e("iWaterlogistic/json", "Получено исключение", e);
+                    id += 13;
+                    name += 13;
+                    order += 13;
+                    cash += 13;
+                    cash_b += 13;
+                    time += 13;
+                    contact += 13;
+                    notice += 13;
+                    date += 13;
+                    period += 13;
+                    address += 13;
+                    coords += 13;
+                    status += 13;
+                } catch (Exception e) {
+                    Log.e("iWaterlogistic/json", "Получено исключение", e);
+                }
+
             }
-
         }
-
         return jsonArrayOrder;
 
     }

@@ -70,7 +70,7 @@ public class Check {
         protected Integer doInBackground(Void... params) {
 
             try {
-                URL url = new URL("http://dev.iwatercrm.ru/iwater_api/driver/server.php");
+                URL url = new URL("http://iwatercrm.ru/iwatercrm/iwater_api/driver/server.php");
                 HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
                 return urlConnection.getResponseCode();
             } catch (MalformedURLException e) {

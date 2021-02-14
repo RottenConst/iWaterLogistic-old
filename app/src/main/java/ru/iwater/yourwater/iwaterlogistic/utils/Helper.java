@@ -175,7 +175,8 @@ public class Helper {
         private final static String NAMESPACE_ACCEEPT = "urn:authuser";
 
 //        private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-        private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+        private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+//        private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
         private String[] error;
         private Context cntx;

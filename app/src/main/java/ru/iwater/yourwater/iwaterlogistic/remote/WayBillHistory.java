@@ -22,7 +22,8 @@ public  class WayBillHistory extends AsyncTask<Void, Void, SoapObject> {
     private final static String NAMESPACE_WAYBIlLHISTORY= "urn:info";
 
 //    private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+//    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
     private String session = "";
 
@@ -48,7 +49,7 @@ public  class WayBillHistory extends AsyncTask<Void, Void, SoapObject> {
             httpTransport.call(SOAP_ACTION_WAYBIlLHISTORY,soapEnvelope,headers);
             SoapObject resultString = (SoapObject) soapEnvelope.getResponse();
             SoapObject result = (SoapObject) resultString.getProperty(0);
-//            Log.d("FragmentWayLists", "count: " + String.valueOf(result.getPropertyCount()));
+            Log.d("FragmentWayLists", "count: " + String.valueOf(result.getPropertyCount()));
             return result;
         }catch (Exception e) {
             Log.e("iWater","Получено исключение",e);

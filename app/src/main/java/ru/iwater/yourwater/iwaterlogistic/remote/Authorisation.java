@@ -32,7 +32,8 @@ public class Authorisation extends AsyncTask<Void, Void, String> {
     private final static String NAMESPACE_AUTH= "urn:authuser";
 
 //    private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+//    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
     private Account account;
     private Context context;
@@ -51,11 +52,11 @@ public class Authorisation extends AsyncTask<Void, Void, String> {
         SoapObject Request = new SoapObject(NAMESPACE_AUTH,METHOD_NAME_AUTH);
 
         SoapSerializationEnvelope soapEnvelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
-        soapEnvelope.setOutputSoapObject(Request);
         Request.addProperty("company", account.getCompany());
         Request.addProperty("login", account.getLogin());
         Request.addProperty("password", account.getPassword());
-//            Request.addProperty("notification", account.getKey());
+        Request.addProperty("notification", Helper.returnFormatedDate(0));
+        soapEnvelope.setOutputSoapObject(Request);
         HttpTransportSE httpTransport = new HttpTransportSE(URL);
 
         List<HeaderProperty> headers=new ArrayList<HeaderProperty>();
@@ -67,8 +68,6 @@ public class Authorisation extends AsyncTask<Void, Void, String> {
             String resultString = soapEnvelope.getResponse().toString();
             //парсим ответ сервиса, если ошибки нет возвращаем ID
             error = resultString.split(",");
-//            Log.d("MAIN_ACTIVITY", "back " + error[0]);
-//            Log.d("MAIN_ACTIVITY", "back " + error[1]);
             if (error[0].replaceAll("\\D+", "").equals("0")) {
                 account.setId(error[1].replaceAll("]+", ""));
             } else if (error[0].replaceAll("\\D+", "").equals("1")) {
@@ -87,11 +86,10 @@ public class Authorisation extends AsyncTask<Void, Void, String> {
         if(error!=null) {
             if (error[0].replaceAll("\\D+", "").equals("0")) {
                 String[] arr = result.split("</session>");
-                ;
 
-//                Log.d("MAIN_ACTIVITY", "Post" + arr[0].replaceAll("\\s+|<session>", ""));
-//                Log.d("MAIN_ACTIVITY", "Post" + arr[1].replaceAll("\\s+|<id>|</id>", ""));
                 SharedPreferencesStorage.addProperty("session", arr[0].replaceAll("\\s+|<session>", ""));
+                SharedPreferencesStorage.addProperty("login", account.getLogin());
+                SharedPreferencesStorage.addProperty("company", account.getCompany());
                 SharedPreferencesStorage.addProperty("id", arr[1].replaceAll("\\s+|<id>|</id>", ""));
                 try {
                     SharedPreferencesStorage.addProperty(Helper.returnFormatedDate(0), "");

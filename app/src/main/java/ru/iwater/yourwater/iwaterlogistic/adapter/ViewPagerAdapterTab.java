@@ -2,22 +2,12 @@ package ru.iwater.yourwater.iwaterlogistic.adapter;
 
 import android.content.Context;
 import android.os.Bundle;
-import android.util.Log;
-import android.view.ViewGroup;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentActivity;
-import androidx.recyclerview.widget.RecyclerView;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 
-import org.ksoap2.serialization.SoapObject;
-
-import java.util.ArrayList;
-
-import ru.iwater.yourwater.iwaterlogistic.remote.DriverWayBill;
 import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentOrders;
-import ru.iwater.yourwater.iwaterlogistic.utils.Check;
 import ru.iwater.yourwater.iwaterlogistic.utils.Helper;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
 

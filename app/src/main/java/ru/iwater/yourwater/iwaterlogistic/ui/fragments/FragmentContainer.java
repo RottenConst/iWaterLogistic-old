@@ -97,7 +97,6 @@ public class FragmentContainer extends Fragment implements SwipeRefreshLayout.On
 
         soapWayListIds = loadTodayList(getContext());
         todayWayListIds = parseSoapTodayListId(soapWayListIds);
-
         this.container.setCurrentItem(position);
 
         int i = -1;
@@ -205,10 +204,12 @@ public class FragmentContainer extends Fragment implements SwipeRefreshLayout.On
             setupContent(container, todayWayListIds);
             if (!SharedPreferencesStorage.checkProperty("amountOfLists" + Helper.returnFormatedDate(0)))
                 SharedPreferencesStorage.addProperty("amountOfLists" + Helper.returnFormatedDate(0), String.valueOf(todayWayListIds.length));
+            noWayBills.setVisibility(View.INVISIBLE);
         } else if (SharedPreferencesStorage.checkProperty("amountOfLists" + Helper.returnFormatedDate(0))) {
             int size = Integer.parseInt(SharedPreferencesStorage.getProperty("amountOfLists" + Helper.returnFormatedDate(0)));
             todayWayListIds = new String[size];
             setupContent(container, todayWayListIds);
+            noWayBills.setVisibility(View.INVISIBLE);
         } else
             noWayBills.setVisibility(View.VISIBLE);
     }

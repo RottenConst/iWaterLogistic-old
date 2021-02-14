@@ -27,9 +27,7 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -52,7 +50,7 @@ import java.util.TimeZone;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import ru.iwater.yourwater.iwaterlogistic.remote.TravelId;
+import ru.iwater.yourwater.iwaterlogistic.domain.ReportOrder;
 import ru.iwater.yourwater.iwaterlogistic.remote.TypeClient;
 import ru.iwater.yourwater.iwaterlogistic.utils.Check;
 import ru.iwater.yourwater.iwaterlogistic.utils.Helper;
@@ -60,6 +58,7 @@ import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.Services.CheckServerService;
 import ru.iwater.yourwater.iwaterlogistic.Services.NetworkMonitorService;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
+import ru.iwater.yourwater.iwaterlogistic.utils.TypeCash;
 
 public class ShipmentData extends AppCompatActivity {
 
@@ -74,6 +73,7 @@ public class ShipmentData extends AppCompatActivity {
     private String cash;
     private String cash_b;
     private RadioGroup radioCashGroup;
+    private ReportOrder reportOrder;
     private CheckBox docYes;
     private CheckBox docNo;
     private TextView yorInfoTV;
@@ -137,7 +137,7 @@ public class ShipmentData extends AppCompatActivity {
         yorInfoIV.setVisibility(View.GONE);
         yorInfoTV.setVisibility(View.GONE);
 
-        Log.d("SHIPMENTS", "CASH = " + cash + " CASH_B = " + cash_b);
+        Log.d("SHIPMENTS", "CASH = " + cash + " CASH_B =" + cash_b);
 
         String typeClient = null;
         SoapObject type = getTypeClient(getBaseContext(), order_id);
@@ -152,8 +152,15 @@ public class ShipmentData extends AppCompatActivity {
             yorInfoIV.setVisibility(View.VISIBLE);
             yorInfoTV.setVisibility(View.VISIBLE);
             radioCashGroup.setVisibility(View.GONE);
+            if (cash_b.equals("0.00")) {
+                cash_b = cash;
+            }
+            reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.NON_CASH);
+            Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
         } else if (cash.equals("0.00") && cash_b != null) {
             radioCashGroup.setVisibility(View.GONE);
+            reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.NON_CASH);
+            Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
         }
 
         orderRow.setText(order);
@@ -165,23 +172,33 @@ public class ShipmentData extends AppCompatActivity {
                     if (cash == "0") {
                         cash = cash_b;
                     }
+                    reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash), TypeCash.CASH);
+                    Log.d("report", "Type of cash " + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+                    break;
                 case R.id.radio_on_site:
                     comment.setText("Оплата на сайте, ");
                     if (cash != "0") {
                         cash_b = cash;
                     }
+                    reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash), TypeCash.ON_SiTE);
+                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+                    break;
                 case R.id.radio_terminal:
                     comment.setText("Оплата через терминал, ");
                     if (cash != "0") {
                         cash_b = cash;
                     }
+                    reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.ON_TERMINAL);
+                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+                    break;
                 case R.id.radio_transfer:
                     comment.setText("Оплата переводом, ");
                     if (cash != "0") {
                         cash_b = cash;
                     }
-                default:
-                    comment.setText("");
+                    reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.TRANSFER);
+                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+                    break;
             }
         });
 
@@ -230,12 +247,14 @@ public class ShipmentData extends AppCompatActivity {
 
         //region отгрузка заказа
         completeOrder.setOnClickListener(v -> {
-            if (tank.getText().toString().length()>0) {
+            if (tank.getText().toString().length()>0 && reportOrder != null) {
                 AlertDialog confirm = new AlertDialog.Builder(ShipmentData.this)
                             .setMessage(R.string.confirm)
                             .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
+                                    int thank = Integer.parseInt(tank.getText().toString());
+                                    reportOrder.setThank(thank);
                                     requestLocation();
                                 }
                             })
@@ -552,7 +571,8 @@ public class ShipmentData extends AppCompatActivity {
         private final static String NAMESPACE_ACCEEPT = "urn:authuser";
 
 //        private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-        private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+        private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+//        private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
         private String[] error;
 
@@ -594,6 +614,7 @@ public class ShipmentData extends AppCompatActivity {
             if(error!=null) {
                 Log.d("ru.iwater.yourwater", Arrays.toString(error));
                 if (error[0].replaceAll("\\D+", "").equals("0")) {
+                    SharedPreferencesStorage.addReport("reportOrder", reportOrder.getOrderID(), reportOrder.getCash(), reportOrder.getTypeCash().name(), reportOrder.getThank());
                     Intent intent = new Intent(ShipmentData.this, Complete.class);
                     intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                     intent.putExtra("order_id", order_id);

@@ -156,9 +156,9 @@ public class LoginActivity extends AppCompatActivity {
                                                 public void onComplete(@NonNull Task<InstanceIdResult> task) {
                                                     if (!task.isSuccessful()) {
                                                         Log.w("firebase", "getInstanceId failed", task.getException());
-                                                    } else
+                                                    } else {
                                                         account.setToken(task.getResult().getToken());
-//                                                    Log.d("MAIN_ACTIVITY", account.getToken());
+                                                    }
                                                 }
                                             });
                                 }

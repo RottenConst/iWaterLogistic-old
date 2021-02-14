@@ -24,22 +24,32 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import org.ksoap2.serialization.SoapObject;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.Services.TimeListenerService;
+import ru.iwater.yourwater.iwaterlogistic.domain.Report;
+import ru.iwater.yourwater.iwaterlogistic.domain.ReportOrder;
+import ru.iwater.yourwater.iwaterlogistic.remote.ReportDriverNow;
+import ru.iwater.yourwater.iwaterlogistic.remote.ReportInserts;
 import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentNotificationHistory;
 import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentWayLists;
 import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentContainer;
 import ru.iwater.yourwater.iwaterlogistic.utils.Check;
 import ru.iwater.yourwater.iwaterlogistic.utils.Helper;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
+import ru.iwater.yourwater.iwaterlogistic.utils.TypeCash;
 
 public class IWaterActivity extends AppCompatActivity {
     static final int NOTIFICATION_ID = 100;
     public final static String CHANNEL_ID = "ru.iwather.yourwater.notification";
     private BottomNavigationView bottomNavigation;//нижняя навигация
     private int position = 0;
-    public static float beznalCash = 0.0F;
-    public static float nalCash = 0.0F;
+    public ReportOrder reportOrders;
+    private static Report reportDay;
     private static NotificationManager notificationManager;
     private static NotificationChannel notificationChannel;
 
@@ -108,7 +118,8 @@ public class IWaterActivity extends AppCompatActivity {
             }
         });
         //endregion
-
+        reportDay = null;
+        initReport(this);
     }
 
     @Override
@@ -128,7 +139,7 @@ public class IWaterActivity extends AppCompatActivity {
                         .setPositiveButton("Да", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                Intent intent = new Intent(IWaterActivity.this, LoginActivity.class);
+                                Intent intent = new Intent(getApplicationContext(), LoginActivity.class);
                                 intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
                                 startActivity(intent);
                                 SharedPreferencesStorage.clearAll();
@@ -147,8 +158,15 @@ public class IWaterActivity extends AppCompatActivity {
                 break;
             case R.id.report_driver_btn:
                 android.app.AlertDialog report = new android.app.AlertDialog.Builder(this)
-                        .setTitle("Итого:")
-                        .setMessage("Наличные: " + nalCash + "\nБезналичные: " + beznalCash)
+                        .setTitle("Итого за " + reportDay.getDate())
+                        .setMessage("Всего: " + reportDay.getFullCash() +
+                                "\n" + TypeCash.CASH.getTitle() + " " + reportDay.getCash() + "р" +
+                                "\n" + TypeCash.ON_SiTE.getTitle() + " " + reportDay.getOn_site() + "р" +
+                                "\n" + TypeCash.ON_TERMINAL.getTitle() + " " + reportDay.getOn_terminal() + "р" +
+                                "\n" + TypeCash.TRANSFER.getTitle() + " " + reportDay.getTransfer() + "р" +
+                                "\n" + TypeCash.NON_CASH.getTitle() + " " + reportDay.getNon_cash() + "р" +
+                                "\nСдано бутелей: " + reportDay.getTank() +
+                                "\n" + "Выполнено заказов " + " " + reportDay.getOrderCount())
                         .setNegativeButton("Ok", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -161,6 +179,155 @@ public class IWaterActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void initReport(Context context) {
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+        String date = format.format(calendar.getTime());
+
+        if (reportDay == null && reportAnswer(context) == null) {
+            reportDay = new Report(date);
+        } else if (reportAnswer(context) != null) {
+            reportDay = getReportDay(reportAnswer(context));
+            if (!reportDay.getDate().equals(date)) {
+                reportDay = new Report(date);
+            }
+            Log.d("report old", "reportDay = " + reportDay.getNon_cash());
+        }
+        if (SharedPreferencesStorage.checkReportProperty("reportOrder")) {
+            reportOrders = SharedPreferencesStorage.getReport("reportOrder");
+        }
+        if (reportOrders != null) {
+            reportDay.setTank(reportOrders.getThank());
+            reportDay.setOrderCount(reportDay.getOrderCount() + 1);
+            switch (reportOrders.getTypeCash()) {
+                case NON_CASH:
+                    reportDay.setNon_cash(reportOrders.getCash());
+                    reportInsert(this, reportOrders.getTypeCash().getTitle(), reportOrders.getCash(), reportDay.getTank(), reportDay.getOrderCount(), reportDay.getFullCash());
+                    break;
+                case CASH:
+                    reportDay.setCash(reportOrders.getCash());
+                    reportInsert(this, reportOrders.getTypeCash().getTitle(), reportOrders.getCash(), reportDay.getTank(), reportDay.getOrderCount(), reportDay.getFullCash());
+                    break;
+                case ON_SiTE:
+                    reportDay.setOn_site(reportOrders.getCash());
+                    reportInsert(this, reportOrders.getTypeCash().getTitle(), reportOrders.getCash(), reportDay.getTank(), reportDay.getOrderCount(), reportDay.getFullCash());
+                    break;
+                case ON_TERMINAL:
+                    reportDay.setOn_terminal(reportOrders.getCash());
+                    reportInsert(this, reportOrders.getTypeCash().getTitle(), reportOrders.getCash(), reportDay.getTank(), reportDay.getOrderCount(), reportDay.getFullCash());
+                    break;
+                case TRANSFER:
+                    reportDay.setTransfer(reportOrders.getCash());
+                    reportInsert(this, reportOrders.getTypeCash().getTitle(), reportOrders.getCash(), reportDay.getTank(), reportDay.getOrderCount(), reportDay.getFullCash());
+                    break;
+            }
+            Log.d("report", "reportDay tank = " + reportDay.getTank());
+        }
+    }
+
+    private void reportInsert(Context context, String payment_type, float payment, int number_containers, int orders_delivered, float total_money) {
+        if (Check.checkInternet(context)) {
+            if (Check.checkServer(context)) {
+                try {
+                    //загрузка путевого листа
+                    ReportInserts reportInserts = new ReportInserts(payment_type, payment, number_containers, orders_delivered, total_money);
+                    reportInserts.execute();
+                } catch (Exception e) {
+                    Log.e("iWater Logistic", "Получено исключение", e);
+                }
+            }
+        }
+//        return null;
+    }
+
+    private SoapObject reportAnswer(Context context) {
+        if (Check.checkInternet(context)) {
+            if (Check.checkServer(context)) {
+                try {
+                    //загрузка путевого листа
+                    ReportDriverNow reportInserts = new ReportDriverNow();
+                    reportInserts.execute();
+                    return reportInserts.get();
+                } catch (Exception e) {
+                    Log.e("iWater Logistic", "Получено исключение", e);
+                }
+            }
+        }
+        return null;
+    }
+
+    private Report getReportDay(SoapObject report) {
+        String typeCash;
+        float cashes = 0;
+        float non_cash =0;
+        float on_site = 0;
+        float transfer = 0;
+        float on_terminal = 0;
+        String container = "";
+        String order = "";
+        int type = 0, moneys = 0, tank = 0, orderCount = 0;
+        for (int i = 0; i < report.getPropertyCount() / 9; i++) {
+            if (!report.getPropertyAsString(type + 2).equals("anyType{}")) {
+                typeCash = report.getPropertyAsString(type + 2);
+            } else typeCash = "";
+
+            if (TypeCash.CASH.getTitle().equals(typeCash)) {
+                if (!report.getPropertyAsString(moneys + 3).equals("anyType{}")) {
+                    String money = report.getPropertyAsString(moneys + 3);
+                    cashes += Float.parseFloat(money);
+                }
+            } else if (TypeCash.NON_CASH.getTitle().equals(typeCash)) {
+                if (!report.getPropertyAsString(moneys + 3).equals("anyType{}")) {
+                    String money = report.getPropertyAsString(moneys + 3);
+                    non_cash += Float.parseFloat(money);
+                }
+            } else if (TypeCash.ON_SiTE.getTitle().equals(typeCash)) {
+                if (!report.getPropertyAsString(moneys + 3).equals("anyType{}")) {
+                    String money = report.getPropertyAsString(moneys);
+                    on_site += Float.parseFloat(money);
+                }
+            } else if (TypeCash.TRANSFER.getTitle().equals(typeCash)) {
+                if (!report.getPropertyAsString(moneys + 3).equals("anyType{}")) {
+                    String money = report.getPropertyAsString(moneys + 3);
+                    transfer += Float.parseFloat(money);
+                }
+            } else if (TypeCash.ON_TERMINAL.getTitle().equals(typeCash)) {
+                if (!report.getPropertyAsString(moneys + 3).equals("anyType{}")) {
+                    String money = report.getPropertyAsString(moneys + 3);
+                    on_terminal += Float.parseFloat(money);
+                }
+            }
+
+            if (!report.getPropertyAsString(tank + 4).equals("anyType{}")) {
+                container = report.getPropertyAsString(tank + 4);
+            } else container = "";
+
+            if (!report.getPropertyAsString(orderCount + 5).equals("anyType{}")) {
+                order = report.getPropertyAsString(orderCount + 5);
+            } else order = "";
+
+            type += 9;
+            moneys += 9;
+            tank += 9;
+            orderCount +=9;
+        }
+
+        Calendar calendar = Calendar.getInstance();
+        SimpleDateFormat format = new SimpleDateFormat("dd.MM.yyyy");
+        String date = format.format(calendar.getTime());
+
+        Report reportDay = new Report(date);
+        reportDay.setCash(cashes);
+        reportDay.setNon_cash(non_cash);
+        reportDay.setOn_terminal(on_terminal);
+        reportDay.setOn_site(on_site);
+        reportDay.setTransfer(transfer);
+        reportDay.setTank(Integer.parseInt(container));
+        reportDay.setOrderCount(Integer.parseInt(order));
+
+        return reportDay;
     }
 
     @SuppressLint("NewApi")

@@ -44,7 +44,7 @@
     <string name="ordersAreAbsent">Нет невыполненных заказов</string>
     <string name="completeOrdesAreAbsent">Нет выполненных заказов</string>
     <string name="returnToCurrent">Вернуться к текущему путевому листу</string>
-    <string name="emptyField">Вы не заполнили поле \'Количество бутылок к возврату\'</string>
+    <string name="emptyField">Укажите вид оплаты и Количество бутылок к возврату</string>
     <string name="checkGPS">Включите \'Местоположение\' в настройках своего устройства</string>
     <string name="confirm">Вы точно хотите отгрузить этот заказ?</string>
     <string name="tryAttempt">Повторить попытку</string>
