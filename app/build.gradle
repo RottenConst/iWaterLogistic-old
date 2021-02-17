@@ -4,7 +4,7 @@ apply plugin: 'kotlin-android'
 android {
     signingConfigs {
         release {
-            storeFile file('D:\\android project\\iWaterLogistic-master\\iWaterKey.jks')
+            storeFile file('C:\\Users\\satan\\AndroidStudioProjects\\iWaterLogistic-old\\iWaterKey.jks')
             storePassword password
             keyAlias Alias
             keyPassword Key

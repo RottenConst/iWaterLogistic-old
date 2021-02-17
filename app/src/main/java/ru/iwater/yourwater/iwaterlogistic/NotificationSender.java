@@ -35,7 +35,7 @@ public class NotificationSender {
 
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        Notification.Builder builder = new Notification.Builder(context, CHANEL_ID);
+        Notification.Builder builder = new Notification.Builder(context);
             builder.setContentIntent(contentIntent)
                     .setSmallIcon(R.drawable.ic_notification_small)
                     .setColor(context.getResources().getColor(R.color.colorPrimary))
@@ -43,6 +43,7 @@ public class NotificationSender {
                     .setContentTitle(context.getResources().getString(R.string.app_name))
                     .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_square))
                     .setWhen(System.currentTimeMillis())
+                    .setStyle(new Notification.BigTextStyle().bigText(text))
                     .setAutoCancel(true); // автоматически закрыть уведомление после нажатия
 
         Notification notification = builder.build();

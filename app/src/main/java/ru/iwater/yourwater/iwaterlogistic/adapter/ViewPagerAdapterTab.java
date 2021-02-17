@@ -29,7 +29,7 @@ public class ViewPagerAdapterTab extends FragmentStateAdapter {
         data.putInt("position",position);
         if(idWayList != null) {
             data.putString("waybill_id", idWayList[position]);
-            SharedPreferencesStorage.addProperty("id" + position, idWayList[position]);
+            SharedPreferencesStorage.addProperty("idwaylist" + position, idWayList[position]);
         }
         FragmentOrders fragment = FragmentOrders.newInstance(idWayList[position], position);
         fragment.setArguments(data);

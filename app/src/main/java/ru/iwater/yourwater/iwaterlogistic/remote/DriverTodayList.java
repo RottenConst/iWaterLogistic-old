@@ -16,13 +16,13 @@ import java.util.List;
  * Класс для получение путевых листов по id водетеля
  */
 public class DriverTodayList extends AsyncTask<Void, Void, SoapObject> {
-    private final static String SOAP_ACTION_DRIVER_TODAY_LIST = "urn:info#drivertoday";
-    private final static String METHOD_NAME_DRIVER_TODAY_LIST = "todaylist";
+    private final static String SOAP_ACTION_DRIVER_TODAY_LIST = "urn:info#drivertodaylist";
+    private final static String METHOD_NAME_DRIVER_TODAY_LIST = "drivertodaylist";
     private final static String NAMESPACE_DRIVER_TODAY_LIST= "urn:info";
 
 //    private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
-//    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+//    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
     private String driverId;
 

@@ -4,14 +4,16 @@ public class NotificationOrder {
     String id;
     String period;
     String status;
+    String address;
     String date;
     public boolean notify;
     public boolean isFail;
 
-    public NotificationOrder(String id, String period, String status, String date) {
+    public NotificationOrder(String id, String period, String address, String status, String date) {
         this.id = id;
         this.period = period;
         this.status = status;
+        this.address = address;
         this.date = date;
         this.notify = false;
         this.isFail = false;
@@ -40,6 +42,14 @@ public class NotificationOrder {
 
     public void setPeriod(String period) {
         this.period = period;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 
     public String getStatus() {

@@ -19,8 +19,8 @@ public class TypeClient extends AsyncTask<Void, Void, SoapObject> {
     private final static String NAMESPACE_TYPE_CLIENT= "urn:info";
 
 //    private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
-//    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+//    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
     private final String idOrders;
 

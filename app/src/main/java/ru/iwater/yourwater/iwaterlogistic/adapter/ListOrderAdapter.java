@@ -1,7 +1,9 @@
 package ru.iwater.yourwater.iwaterlogistic.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -74,6 +76,8 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
         private TextView numOrder;
         private TextView textOrder;
         private CardView cardOrder;
+        private String[] splitPeriod;//разделение временного периода, например 9:00-12:00 по "-"
+        private String[] formatedDate;
 
         public ListOrderHolder(@NonNull View itemView) {
             super(itemView);
@@ -87,6 +91,18 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
         private void onBindView(final Order order, final int position, final List<String> coords, List<String> times, List<String> period){
             numOrder.setText(String.valueOf(position + 1));
             textOrder.setText("№ " + order.getId() + ", " + order.getDate() + ", " + order.getTime() + ", " + order.getAddress());
+            splitPeriod = order.getTime().split("-");
+            formatedDate = order.getDate().replaceAll("\\s+", "").split("\\.");
+            Log.d("Order", "split period " + splitPeriod[0] + " " + splitPeriod[1]);
+            if (splitPeriod.length > 1 && timeDifference(splitPeriod[1], formatedDate) < 3800) {
+                cardOrder.setBackgroundResource(R.color.red_morning);
+                cardOrder.setPreventCornerOverlap(true);
+            }
+
+            if (splitPeriod.length > 1 && timeDifference(splitPeriod[1], formatedDate) < 0) {
+                cardOrder.setBackgroundResource(R.color.gray);
+            }
+
             cardOrder.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -110,6 +126,29 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
                     v.getContext().startActivity(intent);
                 }
             });
+        }
+
+        private long timeDifference(String time, String[] formatedDate) {
+
+            long diff = 0;
+            String date = "";
+
+            if (time.replaceAll("\\s+", "").equals("00:00"))
+                time = "24:00";
+
+            date += formatedDate[2] + "-" + formatedDate[1] + "-" + formatedDate[0];
+            String orderTime = date.replaceAll("\\s+", "") + " " + time.replaceAll("\\s+", "");
+
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+            try {
+                Date date1 = dateFormat.parse(orderTime);
+                diff = (date1.getTime() - System.currentTimeMillis()) / 1000;
+                Log.d("Date", "date = " + diff);
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+
+            return diff;
         }
     }
 }

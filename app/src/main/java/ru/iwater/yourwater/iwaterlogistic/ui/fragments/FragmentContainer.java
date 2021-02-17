@@ -97,6 +97,7 @@ public class FragmentContainer extends Fragment implements SwipeRefreshLayout.On
 
         soapWayListIds = loadTodayList(getContext());
         todayWayListIds = parseSoapTodayListId(soapWayListIds);
+        Log.d("notyf", "today list = " + todayWayListIds.length);
         this.container.setCurrentItem(position);
 
         int i = -1;

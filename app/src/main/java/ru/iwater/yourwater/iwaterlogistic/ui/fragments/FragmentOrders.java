@@ -219,6 +219,7 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
             if (SharedPreferencesStorage.checkProperty("waybill" + position)) {
                 SharedPreferencesStorage.removeProperty("waybill" + position);
             }
+            Log.d("notif", "OrderCount " + orderJson.length() + " position " + position);
             SharedPreferencesStorage.addProperty("waybill" + position, orderJson.toString());
             try {
                 orders = initOrders(orderJson);
