@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.app.Fragment;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -15,6 +14,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.fragment.app.Fragment;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -51,8 +52,8 @@ public class FragmentNotificationHistory extends Fragment {
     BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if(history!=null)//если есть родительский элемент
-                if(history.getChildCount()!=0)//и количество элементов в нём > 0
+            if (history != null)//если есть родительский элемент
+                if (history.getChildCount() != 0)//и количество элементов в нём > 0
                     history.removeAllViews();//то удаляем все элементы
             makeHistory();//отрисовываем разметку заново с учётом новых элементов
             //обновляем родительский элемент
@@ -74,19 +75,19 @@ public class FragmentNotificationHistory extends Fragment {
         try {
             getActivity().setTitle(R.string.titleNotifications);
         } catch (Exception e) {
-            Log.e("iWaterLogistic","Получено исключение",e);
+            Log.e("iWaterLogistic", "Получено исключение", e);
         }
         makeHistory();
-        getActivity().registerReceiver(broadcastReceiver,new IntentFilter("ru.yourwater.iwaterlogistic.UPDATE_NOTIFICATIONS"));
+        getActivity().registerReceiver(broadcastReceiver, new IntentFilter("ru.yourwater.iwaterlogistic.UPDATE_NOTIFICATIONS"));
 
         return v;
     }
 
-    private void makeHistory(){
-        boolean flag=false,flag1=false,flag2=false;
+    private void makeHistory() {
+        boolean flag = false, flag1 = false, flag2 = false;
         try {
             if (SharedPreferencesStorage.checkProperty(Helper.returnFormatedDate(0))) {
-                if(!SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(0)).equals("")) {
+                if (!SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(0)).equals("")) {
                     makeMarking(SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(0)));
                 } else {
                     flag = true;
@@ -94,26 +95,26 @@ public class FragmentNotificationHistory extends Fragment {
             } else {
                 flag = true;
             }
-            if(SharedPreferencesStorage.checkProperty(Helper.returnFormatedDate(-1))){
-                if(!SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(-1)).equals("")) {
+            if (SharedPreferencesStorage.checkProperty(Helper.returnFormatedDate(-1))) {
+                if (!SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(-1)).equals("")) {
                     makeMarking(SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(-1)));
-                }else {
+                } else {
                     flag1 = true;
                 }
-            }else {
+            } else {
                 flag1 = true;
             }
-            if(SharedPreferencesStorage.checkProperty(Helper.returnFormatedDate(-2))){
-                if(!SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(-2)).equals("")) {
+            if (SharedPreferencesStorage.checkProperty(Helper.returnFormatedDate(-2))) {
+                if (!SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(-2)).equals("")) {
                     makeMarking(SharedPreferencesStorage.getProperty(Helper.returnFormatedDate(-2)));
-                }else {
+                } else {
                     flag1 = true;
                 }
-            }else {
+            } else {
                 flag2 = true;
             }
 
-            if(flag && flag1 && flag2)
+            if (flag && flag1 && flag2)
                 noNotifications.setVisibility(View.VISIBLE);
 
         } catch (ParseException e) {
@@ -131,13 +132,12 @@ public class FragmentNotificationHistory extends Fragment {
         int _50dp = 0;
         int _5dp = 0;
         int _10dp = 0;
-        if(diagonal.returnDiagonal(getActivity())>=7) {
+        if (diagonal.returnDiagonal(getActivity()) >= 7) {
             textSize = 22;
             _50dp = (int) (70 * scale + 0.5f);
             _5dp = (int) (10 * scale + 0.5f);
             _10dp = (int) (20 * scale + 0.5f);
-        }
-        else {
+        } else {
             textSize = 14;
             _50dp = (int) (50 * scale + 0.5f);
             _5dp = (int) (5 * scale + 0.5f);
@@ -145,7 +145,7 @@ public class FragmentNotificationHistory extends Fragment {
         }
 
         JSONArray jsonArray = new JSONArray(str);
-        for (int i = jsonArray.length()-1; i >= 0; i--) {
+        for (int i = jsonArray.length() - 1; i >= 0; i--) {
 
             //region строка уведомления
             LinearLayout.LayoutParams rowParams = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, _50dp);

@@ -1,9 +1,7 @@
 package ru.iwater.yourwater.iwaterlogistic.adapter;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,26 +12,19 @@ import androidx.annotation.NonNull;
 import androidx.cardview.widget.CardView;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.domain.Order;
 import ru.iwater.yourwater.iwaterlogistic.ui.activities.AboutOrder;
-import ru.iwater.yourwater.iwaterlogistic.ui.activities.IWaterActivity;
 
 public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.ListOrderHolder> {
 
     private LayoutInflater inflater;
     private List<Order> orders;
-    private List<String> coord;
-    private List<String> times;
-    private List<String> period;
 //    private DateFormat formatTime;
 //    private NotificationSender notificationSender;
 
@@ -42,20 +33,12 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
         this.inflater = LayoutInflater.from(context);
 //        formatTime = new SimpleDateFormat("HH:mm", Locale.getDefault());
 //        notificationSender = new NotificationSender(context);
-        coord = new ArrayList<>();
-        times = new ArrayList<>();
-        period = new ArrayList<>();
-        for (Order order: orders) {
-            coord.add(order.getCoords());
-            times.add(order.getTime());
-            period.add(order.getPeriod());
-        }
     }
 
     @NonNull
     @Override
     public ListOrderHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = inflater.inflate(R.layout.item_order_test, parent, false);
+        View view = inflater.inflate(R.layout.item_order, parent, false);
         return new ListOrderHolder(view);
     }
 
@@ -63,7 +46,7 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
     public void onBindViewHolder(@NonNull ListOrderHolder holder, int position) {
         Order order = orders.get(position);
 
-        holder.onBindView(order, position, coord, times, period);
+        holder.onBindView(order, position);
     }
 
     @Override
@@ -76,8 +59,6 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
         private TextView numOrder;
         private TextView textOrder;
         private CardView cardOrder;
-        private String[] splitPeriod;//разделение временного периода, например 9:00-12:00 по "-"
-        private String[] formatedDate;
 
         public ListOrderHolder(@NonNull View itemView) {
             super(itemView);
@@ -88,19 +69,26 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
 
 
 
-        private void onBindView(final Order order, final int position, final List<String> coords, List<String> times, List<String> period){
+        private void onBindView(final Order order, final int position){
             numOrder.setText(String.valueOf(position + 1));
             textOrder.setText("№ " + order.getId() + ", " + order.getDate() + ", " + order.getTime() + ", " + order.getAddress());
-            splitPeriod = order.getTime().split("-");
-            formatedDate = order.getDate().replaceAll("\\s+", "").split("\\.");
-            Log.d("Order", "split period " + splitPeriod[0] + " " + splitPeriod[1]);
-            if (splitPeriod.length > 1 && timeDifference(splitPeriod[1], formatedDate) < 3800) {
-                cardOrder.setBackgroundResource(R.color.red_morning);
-                cardOrder.setPreventCornerOverlap(true);
+            String[] splitPeriod = order.getTime().split("-");
+            String[] formatedDate = order.getDate().replaceAll("\\s+", "").split("\\.");
+
+            if (timeDifference(splitPeriod[1], formatedDate) > 7200) {
+                numOrder.setBackgroundResource(R.drawable.green_circle);
             }
 
-            if (splitPeriod.length > 1 && timeDifference(splitPeriod[1], formatedDate) < 0) {
-                cardOrder.setBackgroundResource(R.color.gray);
+            if (timeDifference(splitPeriod[1], formatedDate) < 7200 && timeDifference(splitPeriod[1], formatedDate) > 3600) {
+                numOrder.setBackgroundResource(R.drawable.yellow_circle);
+            }
+
+            if (timeDifference(splitPeriod[1], formatedDate) < 3600) {
+                numOrder.setBackgroundResource(R.drawable.red_circle);
+            }
+
+            if (timeDifference(splitPeriod[1], formatedDate) < 0) {
+                numOrder.setBackgroundResource(R.drawable.grey_circle);
             }
 
             cardOrder.setOnClickListener(new View.OnClickListener() {
@@ -118,11 +106,8 @@ public class ListOrderAdapter extends RecyclerView.Adapter<ListOrderAdapter.List
                     intent.putExtra("contact", order.getContact());
                     intent.putExtra("notice", order.getNotice());
                     intent.putExtra("position", position);
+                    intent.putExtra("coords", order.getCoords());
                     intent.putExtra("status", order.getStatus());
-                    //данные для карты
-                    intent.putExtra("coord", coords.toString());
-                    intent.putExtra("times", times.toString());
-                    intent.putExtra("period", period.toString());
                     v.getContext().startActivity(intent);
                 }
             });

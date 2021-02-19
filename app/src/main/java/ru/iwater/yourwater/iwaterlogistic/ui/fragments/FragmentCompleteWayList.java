@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ru.iwater.yourwater.iwaterlogistic.domain.OldOrder;
-import ru.iwater.yourwater.iwaterlogistic.domain.Order;
 import ru.iwater.yourwater.iwaterlogistic.remote.DriverWayBill;
 import ru.iwater.yourwater.iwaterlogistic.utils.Check;
 import ru.iwater.yourwater.iwaterlogistic.utils.Diagonal;
@@ -58,16 +57,12 @@ public class FragmentCompleteWayList extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View v = inflater.inflate(R.layout.fragment_complete_way_list, container, false);
+        View v = inflater.inflate(R.layout.fragment_order, container, false);
 
         //region инициализация
         SharedPreferencesStorage.init(getContext());
         diagonal = new Diagonal();
 
-        activeOrders = (LinearLayout) v.findViewById(R.id.currentOrd);
-        complitOrders = (LinearLayout) v.findViewById(R.id.completeOrd);
-        activeOrdersAreAbsent = (TextView) v.findViewById(R.id.textView23);
-        completeOrdersAreAbsent = (TextView) v.findViewById(R.id.textView24);
         //endregion
 
         if(SharedPreferencesStorage.checkProperty("session"))
@@ -77,7 +72,7 @@ public class FragmentCompleteWayList extends Fragment {
         if(Check.checkInternet(getContext())) {
             if(Check.checkServer(getContext())) {
                 try {
-                    wayBill = new DriverWayBill(session, id);
+                    wayBill = new DriverWayBill(session);
                     wayBill.execute();
                     wayBillData = wayBill.get();
                 } catch (Exception e) {

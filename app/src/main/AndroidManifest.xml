@@ -49,11 +49,6 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/shipmentData" />
         <activity
-            android:name=".ui.activities.map.MapActivity"
-            android:configChanges="keyboardHidden|orientation|screenSize"
-            android:label="@string/map"
-            />
-        <activity
             android:name=".ui.activities.map.GeneralMap"
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/map"

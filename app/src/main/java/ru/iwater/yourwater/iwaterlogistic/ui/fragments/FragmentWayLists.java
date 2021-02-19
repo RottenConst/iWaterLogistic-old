@@ -123,7 +123,7 @@ public class FragmentWayLists extends Fragment {
             @Override
             public void onClick(View v) {
                 if (getFragmentManager() != null) {
-                    getFragmentManager().beginTransaction().replace(R.id.Container, FragmentContainer.newInstance(0)).commit();
+                    getFragmentManager().beginTransaction().replace(R.id.Container, FragmentOrders.newInstance()).commit();
                 }
                 bottomNavigation.getMenu().getItem(1).setChecked(true);
             }

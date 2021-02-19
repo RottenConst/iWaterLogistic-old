@@ -12,6 +12,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -26,20 +27,18 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.ksoap2.serialization.SoapObject;
 
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 
 import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.adapter.ListOrderAdapter;
 import ru.iwater.yourwater.iwaterlogistic.domain.Order;
 import ru.iwater.yourwater.iwaterlogistic.remote.DriverWayBill;
-import ru.iwater.yourwater.iwaterlogistic.ui.activities.IWaterActivity;
+import ru.iwater.yourwater.iwaterlogistic.ui.activities.map.GeneralMap;
 import ru.iwater.yourwater.iwaterlogistic.utils.Check;
-import ru.iwater.yourwater.iwaterlogistic.utils.Diagonal;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
 
 public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRefreshListener {
@@ -51,25 +50,24 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
     private LinearLayout complitOrders;//завершённые заказы
     private LinearLayout performingOrders;//выполняющиеся заказы
     private TextView performText;//надпись Выполняются...
+    private SwipeRefreshLayout refreshContainer;
+    private String[] splitPeriod;//разделение временного периода, например 9:00-12:00 по "-"
+    private String[] splitPeriodNext;
+    private String[] formatedDate;//форматированная дата
+    private TextView tvNoCurrentOrder;
+    private Button btnGeneralMap;
     private RecyclerView ordersList; //список заказов
-    private RecyclerView completeList;
     private SoapObject ordersSoap;
     private JSONArray orderJson;
-    private static ArrayList<Order> completeOrders;
     private static ArrayList<Order> orders; //заказы
     private ListOrderAdapter adapterListOrder;//адаптер для заказов
-    private ListOrderAdapter completeAdapterListOrder;
     private String session = "";//ключ сессии
-    private String id = "";//номер путевого листа
 
     //для разметки
     private boolean isRegistered = false;//проверка зарегистрирован приёмник или нет
     private int position = 0;//номер вкладки
 
     //endregion
-
-    public FragmentOrders() {
-    }
 
     public static FragmentOrders newInstance() {
         return new FragmentOrders();
@@ -124,28 +122,18 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Bundle bundle = getArguments();
-        if (bundle != null) {
-            id = bundle.getString("waybill_id");
-            position = bundle.getInt("position");
-        }
-//        Log.d("FragmentOrders", "START FragmentOrders");
 
         SharedPreferencesStorage.init(getContext());
 
-        if (SharedPreferencesStorage.checkProperty("waybill" + position)) {
+        if (SharedPreferencesStorage.checkProperty("waybill")) {
             try {
-                JSONArray jsonArray = new JSONArray(SharedPreferencesStorage.getProperty("waybill" + position));
+                JSONArray jsonArray = new JSONArray(SharedPreferencesStorage.getProperty("waybill"));
                 if (jsonArray.length() > 0) {
                     String wbDate = jsonArray.getJSONObject(0).getString("date").replaceAll("\\s+", "");
                     String curDate = returnDate();
 
                     if (!wbDate.equals(curDate))
-                        SharedPreferencesStorage.removeProperty("waybill" + position);
-//                    Log.d("***********************", "current=" + curDate + " waybill=" + wbDate);
-                }
-                for (int f = 0; f <= jsonArray.length(); f++) {
-                    Log.d("FragmentOrders", jsonArray.get(f) + ", " + f);
+                        SharedPreferencesStorage.removeProperty("waybill");
                 }
 
             } catch (JSONException e) {
@@ -156,37 +144,42 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
         if (SharedPreferencesStorage.checkProperty("session")) {
             session = SharedPreferencesStorage.getProperty("session");
         }
-        initData(getContext());
 
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_order_test, container, false);
+        View v = inflater.inflate(R.layout.fragment_order, container, false);
 
         ordersList = v.findViewById(R.id.list_order);
-        completeList = v.findViewById(R.id.complite_orders);
+        tvNoCurrentOrder = v.findViewById(R.id.tv_no_current_order);
+        refreshContainer = v.findViewById(R.id.refresh_container);
+        btnGeneralMap = v.findViewById(R.id.btn_on_map);
+        refreshContainer.setOnRefreshListener(this);
 
+        initData(getContext());
 
-        LinearLayoutManager llm = new LinearLayoutManager(this.getContext());
-        llm.setOrientation(LinearLayoutManager.VERTICAL);
-        ordersList.setLayoutManager(llm);
-        ordersList.setAdapter(adapterListOrder);
+        btnGeneralMap.setOnClickListener(v1 -> {
+            Intent intent = new Intent(getContext(), GeneralMap.class);
+            intent.putExtra("countOrder", orders.size());
+            startActivity(intent);
+        });
 
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this.getContext());
-        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
-        completeList.setLayoutManager(linearLayoutManager);
-        completeList.setAdapter(completeAdapterListOrder);
-
-        if (SharedPreferencesStorage.checkProperty("cashOrder" + position) && !isRegistered) {
+        if (SharedPreferencesStorage.checkProperty("cashOrder") && !isRegistered) {
             if (getActivity() != null) {
-                getActivity().registerReceiver(broadcastReceiver, new IntentFilter("ru.yourwater.iwaterlogistic.UPDATE_MARKING" + position));
+                getActivity().registerReceiver(broadcastReceiver, new IntentFilter("ru.yourwater.iwaterlogistic.UPDATE_MARKING"));
                 isRegistered = true;
             }
         }
 
         return v;
+    }
+
+    @Override
+    public void onRefresh() {
+        initData(getContext());
+        refreshContainer.setRefreshing(false);
     }
 
     //region загрузка данных
@@ -195,9 +188,8 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
             if (Check.checkServer(context)) {
                 try {
                     //загрузка путевого листа
-                    DriverWayBill driverWayBill = new DriverWayBill(session, id);
+                    DriverWayBill driverWayBill = new DriverWayBill(session);
                     driverWayBill.execute();
-//                    Log.d("ORDER", driverWayBill.get().toString());
                     return driverWayBill.get();
                 } catch (Exception e) {
                     Log.e("iWater Logistic", "Получено исключение", e);
@@ -211,16 +203,13 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
     private void initData(Context context) {
         //заказы
         ordersSoap = loadOrders(context);
-//        Log.d("FragmentOrders", "SOAP ORDERS + " + ordersSoap);
-        //endregion
         if (ordersSoap != null) {
             orderJson = soapToJSON(ordersSoap);
-//            Log.d("FragmentOrder", "Order = " + orderJson);
-            if (SharedPreferencesStorage.checkProperty("waybill" + position)) {
-                SharedPreferencesStorage.removeProperty("waybill" + position);
+            if (SharedPreferencesStorage.checkProperty("waybill")) {
+                SharedPreferencesStorage.removeProperty("waybill");
             }
             Log.d("notif", "OrderCount " + orderJson.length() + " position " + position);
-            SharedPreferencesStorage.addProperty("waybill" + position, orderJson.toString());
+            SharedPreferencesStorage.addProperty("waybill", orderJson.toString());
             try {
                 orders = initOrders(orderJson);
             } catch (JSONException e) {
@@ -228,11 +217,20 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
             }
         } else orders = new ArrayList<>();
         //region кэширование путевого листа
-
         List<Order> activeOrder = parseOrder(orders);
-
         adapterListOrder = new ListOrderAdapter(getContext(), activeOrder);
-        completeAdapterListOrder = new ListOrderAdapter(getContext(), completeOrders);
+
+        if (orders.size() != 0) {
+            ordersList.setVisibility(View.VISIBLE);
+            LinearLayoutManager llm = new LinearLayoutManager(this.getContext());
+            llm.setOrientation(LinearLayoutManager.VERTICAL);
+            ordersList.setLayoutManager(llm);
+            ordersList.setAdapter(adapterListOrder);
+            tvNoCurrentOrder.setVisibility(View.GONE);
+        } else {
+            ordersList.setVisibility(View.GONE);
+            tvNoCurrentOrder.setVisibility(View.VISIBLE);
+        }
     }
 
     private JSONArray soapToJSON(SoapObject ordersSoap) {
@@ -333,12 +331,9 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
     }
 
     private List<Order> parseOrder(ArrayList<Order> orders) {
-        completeOrders = new ArrayList<>();
         List<Order> activeOrder = new ArrayList<>();
         for (int i = 0; i < orders.size(); i++) {
-            if (orders.get(i).getStatus().equals("1")) {
-                completeOrders.add(orders.get(i));
-            } else {
+            if (orders.get(i).getStatus().equals("0")) {
                 activeOrder.add(orders.get(i));
             }
         }
@@ -347,7 +342,7 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     private ArrayList<Order> initOrders(JSONArray waybill) throws JSONException {
-        final ArrayList<Order> orders = new ArrayList<Order>();
+        final ArrayList<Order> orders = new ArrayList<>();
         for (int i = 0; i < waybill.length(); i++) {
             orders.add(new Order(
                     waybill.getJSONObject(i).getString("id"),
@@ -365,24 +360,17 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
                     waybill.getJSONObject(i).getString("coords")
             ));
         }
-        //сортировка заказов
-//        orders.sort(new Comparator<Order>() {
-//            @Override
-//            public int compare(Order o1, Order o2) {
-//                return o1.getId().compareTo(o2.getId());
-//            }
-//        });
         sortOrder(orders);
         //удаление заказов
-        ArrayList<Order> sortOrder = new ArrayList<>();
-        for (int i = 0; i < orders.size() - 1; i++) {
-            if(!orders.get(i).getId().equals(orders.get(i+1).getId())) {
-                sortOrder.add(orders.get(i));
-            }
-        }
-        sortOrder.add(orders.get(orders.size() - 1));
+//        ArrayList<Order> sortOrder = new ArrayList<>();
+//        for (int i = 0; i < orders.size() - 1; i++) {
+//            if(!orders.get(i).getId().equals(orders.get(i+1).getId())) {
+//                sortOrder.add(orders.get(i));
+//            }
+//        }
+//        sortOrder.add(orders.get(orders.size() - 1));
 
-        return sortOrder;
+        return orders;
     }
 
     private void sortOrder(ArrayList<Order> orders) {
@@ -391,7 +379,10 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
         while (!sorted) {
             sorted = true;
             for (int i = 0; i < orders.size() - 1; i++){
-                if (Integer.parseInt(orders.get(i).getId()) > Integer.parseInt(orders.get(i +1).getId())){
+                splitPeriod = orders.get(i).getTime().replaceAll("\\s+", "").split("-");
+                splitPeriodNext = orders.get(i + 1).getTime().replaceAll("\\s+", "").split("-");
+                formatedDate = orders.get(i).getDate().replaceAll("\\s+", "").split("\\.");
+                if (timeDifference(splitPeriod[1], formatedDate) > timeDifference(splitPeriodNext[1], formatedDate)){
                     order = new Order(orders.get(i).getId(),
                             orders.get(i).getName(),
                             orders.get(i).getOrder(),
@@ -413,6 +404,28 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
         }
     }
 
+    private long timeDifference(String time, String[] formatedDate) {
+
+        long diff = 0;
+        String date = "";
+
+        if (time.replaceAll("\\s+", "").equals("00:00"))
+            time = "24:00";
+
+        date += formatedDate[2] + "-" + formatedDate[1] + "-" + formatedDate[0];
+        String orderTime = date.replaceAll("\\s+", "") + " " + time.replaceAll("\\s+", "");
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm");
+        try {
+            Date date1 = dateFormat.parse(orderTime);
+            diff = (date1.getTime() - System.currentTimeMillis()) / 1000;
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+
+        return diff;
+    }
+
 
     //дата в формате 01.01.2018
     private String returnDate() {
@@ -432,11 +445,5 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
                 isRegistered = false;
             }
         }
-    }
-
-    @Override
-    public void onRefresh() {
-        initData(getContext());
-//        refreshLayout.setRefreshing(false);
     }
 }

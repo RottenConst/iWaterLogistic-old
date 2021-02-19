@@ -30,15 +30,19 @@ public class NotificationSender {
     }
 
 
-    @SuppressLint("NewApi")
     public void sendNotification(String text, int NOTIFY_ID, boolean isNotify){
 
         notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
 
-        Notification.Builder builder = new Notification.Builder(context);
-            builder.setContentIntent(contentIntent)
+        Notification.Builder builder;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            builder = new Notification.Builder(context, CHANEL_ID);
+        } else  {
+            builder = new Notification.Builder(context);
+        }
+        builder.setContentIntent(contentIntent)
                     .setSmallIcon(R.drawable.ic_notification_small)
-                    .setColor(context.getResources().getColor(R.color.colorPrimary))
+//                    .setColor(context.getResources().getColor(R.color.colorPrimary))
                     .setContentText(text) // Текст уведомления
                     .setContentTitle(context.getResources().getString(R.string.app_name))
                     .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_square))

@@ -63,4 +63,6 @@
     <string name="transfer">Перевод</string>
     <string name="on_site">на сайте</string>
     <string name="general_map_text">Общая карта</string>
+    <string name="completeOrder">Завершённые заказы</string>
+    <string name="callClient">Звонок клиенту</string>
 </resources>

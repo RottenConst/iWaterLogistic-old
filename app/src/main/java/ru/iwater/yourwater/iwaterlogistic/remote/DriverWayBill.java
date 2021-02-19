@@ -21,27 +21,23 @@ public class DriverWayBill extends AsyncTask<Void, Void, SoapObject> {
     private final static String METHOD_NAME_DRIVER_WAY_BIlL = "testwaybill";
     private final static String NAMESPACE_DRIVER_WAY_BIlL= "urn:info";
 
-//    private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-//    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
-    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php?wsdl";
+//    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
     private String session="";
-    private String id="";
 
-    public DriverWayBill(String session, String id){
+    public DriverWayBill(String session){
         this.session = session;
-        this.id = id;
     }
 
     @Override
     protected SoapObject doInBackground(Void... params) {
-        Log.d("Order load", "id = " + id + " session = " + session);
+        Log.d("Order load", " session = " + session);
         SoapObject Request = new SoapObject(NAMESPACE_DRIVER_WAY_BIlL,METHOD_NAME_DRIVER_WAY_BIlL);
 
         SoapSerializationEnvelope soapEnvelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
         soapEnvelope.setOutputSoapObject(Request);
         Request.addProperty("session", session);//добавление свойства с именем session в запрос
-        Request.addProperty("id", id);//добавление свойства с именем id в запрос
         HttpTransportSE httpTransport = new HttpTransportSE(URL);
 
         //добавление в заголовок информации о формате сжимаемых данных(gzip)

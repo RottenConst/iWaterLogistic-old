@@ -1,4 +1,4 @@
-  package ru.iwater.yourwater.iwaterlogistic.Receivers;
+package ru.iwater.yourwater.iwaterlogistic.Receivers;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -45,55 +45,49 @@ public class TimeNotification extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         SharedPreferencesStorage.init(context);
         notificationSender = new NotificationSender(context);
-        if (SharedPreferencesStorage.checkProperty("session")){
+        if (SharedPreferencesStorage.checkProperty("session")) {
             session = SharedPreferencesStorage.getProperty("session");
             idDriver = SharedPreferencesStorage.getProperty("id");
 //            Log.d("notif", "session = " + session);
         }
-        int wayListCount = getDriverList(loadTodayList(context));
-        int h = 6;//количество путевых листов по умолчанию
-        if (SharedPreferencesStorage.checkProperty("amountOfLists" + Helper.returnFormatedDate(0)))
-            h = Integer.valueOf(SharedPreferencesStorage.getProperty("amountOfLists" + Helper.returnFormatedDate(0)));
-        comparisonWayList(h, wayListCount);
-        for (int k = 0; k < h; k++) {
-            if (SharedPreferencesStorage.checkProperty("waybill" + k)) {
-                id = SharedPreferencesStorage.getProperty("idwaylist" + k);
-//                Log.d("notif", "id = " + id);
-                notifyOrders = getNotiyfOrderCount(k);
-                ordersCount = soapToJSON(loadOrders(context)).length();
-                Log.d("notif", "way list#" + k + " orderCount " + ordersCount + " > notifyOrders " + notifyOrders.size());
-                writeToArrays();
-                if (notifyOrders != null) {
-                    for (int i = 0; i < notifyOrders.size(); i++) {
-                        if (notifyOrders.get(i).getStatus().equals("0") && !notifyOrders.get(i).getPeriod().equals("")) {
-                            splitPeriod = notifyOrders.get(i).getPeriod().replaceAll("\\s+", "").split("-");
-                            formatedDate = notifyOrders.get(i).getDate().replaceAll("\\s+", "").split("\\.");
-                            if (timeDifference(splitPeriod[1], formatedDate) <= 3600 && timeDifference(splitPeriod[1], formatedDate) > 0) {//за 15 минут
-                                if (!notifyOrders.get(i).notify) {
-                                    notificationSender.sendNotification("Через 1 час истекает заказ по адрессу " + notifyOrders.get(i).getAddress(), i, notifyOrders.get(i).getNotify());
-                                    Helper.storeNotification(context, "Через 1 час истекает заказ по адрессу " + notifyOrders.get(i).getAddress(), i + "list" + k);
-                                    context.sendBroadcast(new Intent("ru.yourwater.iwaterlogistic.UPDATE_NOTIFICATIONS"));
-                                    isNotifyIds.add(notifyOrders.get(i).getId());
-                                }
-                            } else if (timeDifference(splitPeriod[1], formatedDate) < 0) {//время вышло
-                                if (!notifyOrders.get(i).isFail) {
-                                    notificationSender.sendNotification("Время отгрузки заказа по адрессу " + notifyOrders.get(i).getAddress() + " истекло", -i, notifyOrders.get(i).isFail);
-                                    Helper.storeNotification(context, "Время отгрузки заказа по адрессу " + notifyOrders.get(i).getAddress() + " истекло", -i + "list" + k);
-                                    context.sendBroadcast(new Intent("ru.yourwater.iwaterlogistic.UPDATE_NOTIFICATIONS"));
-                                    isFails.add(notifyOrders.get(i).getId());
-                                }
+
+
+        if (SharedPreferencesStorage.checkProperty("waybill")) {
+            ordersCount = soapToJSON(loadOrders(context)).length();
+            notifyOrders = getNotiyfOrderCount();
+//            Log.d("notif",  " orderCount " + ordersCount + " > notifyOrders " + notifyOrders.size());
+            writeToArrays(notifyOrders.size(), ordersCount);
+            if (notifyOrders != null) {
+                for (int i = 0; i < notifyOrders.size(); i++) {
+                    if (notifyOrders.get(i).getStatus().equals("0") && !notifyOrders.get(i).getPeriod().equals("")) {
+                        splitPeriod = notifyOrders.get(i).getPeriod().replaceAll("\\s+", "").split("-");
+                        formatedDate = notifyOrders.get(i).getDate().replaceAll("\\s+", "").split("\\.");
+                        if (timeDifference(splitPeriod[1], formatedDate) <= 3600 && timeDifference(splitPeriod[1], formatedDate) > 0) {//за 15 минут
+                            if (!notifyOrders.get(i).notify) {
+                                notificationSender.sendNotification("Через 1 час истекает заказ " + notifyOrders.get(i).getAddress(), i, notifyOrders.get(i).getNotify());
+                                Helper.storeNotification(context, "Через 1 час истекает заказ " + notifyOrders.get(i).getAddress(), i + "list");
+                                context.sendBroadcast(new Intent("ru.yourwater.iwaterlogistic.UPDATE_NOTIFICATIONS"));
+                                isNotifyIds.add(notifyOrders.get(i).getId());
+                            }
+                        } else if (timeDifference(splitPeriod[1], formatedDate) < 0) {//время вышло
+                            if (!notifyOrders.get(i).isFail) {
+                                notificationSender.sendNotification("Время истекло. Адрес: " + notifyOrders.get(i).getAddress(), -i, notifyOrders.get(i).isFail);
+                                Helper.storeNotification(context, "Время истекло. Адрес: " + notifyOrders.get(i).getAddress(), -i + "list");
+                                context.sendBroadcast(new Intent("ru.yourwater.iwaterlogistic.UPDATE_NOTIFICATIONS"));
+                                isFails.add(notifyOrders.get(i).getId());
                             }
                         }
                     }
-
                 }
+
             }
         }
-    }
 
-    public List<NotificationOrder> getNotiyfOrderCount(int k) {
+}
+
+    public List<NotificationOrder> getNotiyfOrderCount() {
         try {
-            JSONArray waybill = new JSONArray(SharedPreferencesStorage.getProperty("waybill" + k));
+            JSONArray waybill = new JSONArray(SharedPreferencesStorage.getProperty("waybill"));
             notifyOrders.clear();
             for (int j = notifyOrders.size(); j < waybill.length(); j++) {
                 String id = waybill.getJSONObject(j).getString("id");
@@ -103,9 +97,9 @@ public class TimeNotification extends BroadcastReceiver {
                 String date = waybill.getJSONObject(j).getString("date");
                 NotificationOrder notOrder = new NotificationOrder(id, time, address, status, date);
                 for (int idNotify = 0; idNotify < isNotifyIds.size(); idNotify++) {
-                        if (isNotifyIds.get(idNotify).equals(id)) {
-                            notOrder.notify = true;
-                        }
+                    if (isNotifyIds.get(idNotify).equals(id)) {
+                        notOrder.notify = true;
+                    }
                 }
                 for (int idFail = 0; idFail < isFails.size(); idFail++) {
                     if (isFails.get(idFail).equals(id)) {
@@ -121,16 +115,9 @@ public class TimeNotification extends BroadcastReceiver {
     }
 
     //сравнение заказов в путевых листах и уведомление
-    private void writeToArrays() {
-        if (ordersCount > notifyOrders.size()) {
-            notificationSender.sendNotification("Появились новые заказы, пожалуйста обновите список заказов", notifyOrders.size() + 100, false);
-        }
-    }
-
-    private void comparisonWayList(int local, int crm) {
+    private void writeToArrays(int local, int crm) {
         if (crm > local) {
-            notificationSender.sendNotification("Появились новые заказы, пожалуйста обновите список заказов", crm + 200, false);
-            SharedPreferencesStorage.addProperty("amountOfLists" + Helper.returnFormatedDate(0), String.valueOf(crm));
+            notificationSender.sendNotification("Появились новые заказы, пожалуйста обновите список заказов", ordersCount + 100, false);
         }
     }
 
@@ -163,7 +150,7 @@ public class TimeNotification extends BroadcastReceiver {
                 try {
                     //загрузка путевого листа
 //                    Log.d("Order", "session = " + session + " id= " + id);
-                    DriverWayBill driverWayBill = new DriverWayBill(session, id);
+                    DriverWayBill driverWayBill = new DriverWayBill(session);
                     driverWayBill.execute();
                     return driverWayBill.get();
                 } catch (Exception e) {

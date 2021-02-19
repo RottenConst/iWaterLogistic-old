@@ -23,9 +23,8 @@ public class ReportInserts extends AsyncTask<Void, Void, SoapObject> {
     private final static String METHOD_REPORT_INSERTS = "reportInserts";
     private final static String NAMESPACE_REPORT_INSERTS = "urn:info";
 
-    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-//    private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-//    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
+//    private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+    private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php?wsdl";
 
     private String payment_type;
     private Float payment;
@@ -55,10 +54,10 @@ public class ReportInserts extends AsyncTask<Void, Void, SoapObject> {
         SoapSerializationEnvelope soapEnvelope = new SoapSerializationEnvelope(SoapEnvelope.VER11);
         request.addProperty("login", login);
         request.addProperty("payment_type", payment_type);
-        request.addProperty("payment", payment.toString());
+        request.addProperty("payment", String.valueOf(payment));
         request.addProperty("number_containers", number_containers);
         request.addProperty("orders_delivered", orders_delivered);
-        request.addProperty("total_money", total_money.toString());
+        request.addProperty("total_money", String.valueOf(total_money));
         request.addProperty("company", company);
         soapEnvelope.setOutputSoapObject(request);
         HttpTransportSE httpTransport = new HttpTransportSE(URL);

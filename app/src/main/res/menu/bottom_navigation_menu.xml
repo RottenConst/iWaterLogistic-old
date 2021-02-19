@@ -2,8 +2,8 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
         <item
             android:id="@+id/waysList"
-            android:title="@string/waysList"
-            android:icon="@drawable/ic_grey_bill" />
+            android:icon="@drawable/ic_grey_bill"
+            android:title="@string/completeOrder" />
 
         <item
             android:id="@+id/orders"

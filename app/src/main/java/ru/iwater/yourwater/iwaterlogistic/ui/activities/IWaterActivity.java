@@ -35,9 +35,10 @@ import ru.iwater.yourwater.iwaterlogistic.domain.Report;
 import ru.iwater.yourwater.iwaterlogistic.domain.ReportOrder;
 import ru.iwater.yourwater.iwaterlogistic.remote.ReportDriverNow;
 import ru.iwater.yourwater.iwaterlogistic.remote.ReportInserts;
+import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentCompleteOrder;
 import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentNotificationHistory;
+import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentOrders;
 import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentWayLists;
-import ru.iwater.yourwater.iwaterlogistic.ui.fragments.FragmentContainer;
 import ru.iwater.yourwater.iwaterlogistic.utils.Check;
 import ru.iwater.yourwater.iwaterlogistic.utils.Helper;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
@@ -47,7 +48,6 @@ public class IWaterActivity extends AppCompatActivity {
     static final int NOTIFICATION_ID = 100;
     public final static String CHANNEL_ID = "ru.iwather.yourwater.notification";
     private BottomNavigationView bottomNavigation;//нижняя навигация
-    private int position = 0;
     public ReportOrder reportOrders;
     private static Report reportDay;
     private static NotificationManager notificationManager;
@@ -86,12 +86,10 @@ public class IWaterActivity extends AppCompatActivity {
         }
         //endregion
 
-        Intent intent = getIntent();
-        position = intent.getIntExtra("position", 0);
 
         //выбираем по умолчанию вкладку Заказы
         bottomNavigation.getMenu().getItem(1).setChecked(true);
-        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentContainer.newInstance(position)).commit();
+        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentOrders.newInstance()).commit();
 
         //region обработка нажатия по пунктам навигации внизу экрана
         bottomNavigation.setOnNavigationItemSelectedListener(new BottomNavigationView.OnNavigationItemSelectedListener() {
@@ -102,15 +100,15 @@ public class IWaterActivity extends AppCompatActivity {
 
                 switch (id) {
                     case R.id.waysList:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentWayLists.newInstance()).commit();
+                        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentCompleteOrder.newInstance()).commit();
                         bottomNavigation.getMenu().getItem(0).setChecked(true);
                         break;
                     case R.id.orders:
-                        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentContainer.newInstance(position)).commit();
+                        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentOrders.newInstance()).commit();
                         bottomNavigation.getMenu().getItem(1).setChecked(true);
                         break;
                     case R.id.history:
-                        getFragmentManager().beginTransaction().replace(R.id.Container, FragmentNotificationHistory.newInstance()).commit();
+                        getSupportFragmentManager().beginTransaction().replace(R.id.Container, FragmentNotificationHistory.newInstance()).commit();
                         bottomNavigation.getMenu().getItem(2).setChecked(true);
                         break;
                 }
@@ -167,12 +165,7 @@ public class IWaterActivity extends AppCompatActivity {
                                 "\n" + TypeCash.NON_CASH.getTitle() + " " + reportDay.getNon_cash() + "р" +
                                 "\nСдано бутелей: " + reportDay.getTank() +
                                 "\n" + "Выполнено заказов " + " " + reportDay.getOrderCount())
-                        .setNegativeButton("Ok", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        })
+                        .setNegativeButton("Ok", (dialog, which) -> dialog.cancel())
                         .create();
                 report.show();
 
@@ -193,7 +186,6 @@ public class IWaterActivity extends AppCompatActivity {
             if (!reportDay.getDate().equals(date)) {
                 reportDay = new Report(date);
             }
-            Log.d("report old", "reportDay = " + reportDay.getNon_cash());
         }
         if (SharedPreferencesStorage.checkReportProperty("reportOrder")) {
             reportOrders = SharedPreferencesStorage.getReport("reportOrder");
@@ -223,7 +215,6 @@ public class IWaterActivity extends AppCompatActivity {
                     reportInsert(this, reportOrders.getTypeCash().getTitle(), reportOrders.getCash(), reportDay.getTank(), reportDay.getOrderCount(), reportDay.getFullCash());
                     break;
             }
-            Log.d("report", "reportDay tank = " + reportDay.getTank());
         }
     }
 
@@ -231,7 +222,6 @@ public class IWaterActivity extends AppCompatActivity {
         if (Check.checkInternet(context)) {
             if (Check.checkServer(context)) {
                 try {
-                    //загрузка путевого листа
                     ReportInserts reportInserts = new ReportInserts(payment_type, payment, number_containers, orders_delivered, total_money);
                     reportInserts.execute();
                 } catch (Exception e) {
@@ -285,7 +275,7 @@ public class IWaterActivity extends AppCompatActivity {
                 }
             } else if (TypeCash.ON_SiTE.getTitle().equals(typeCash)) {
                 if (!report.getPropertyAsString(moneys + 3).equals("anyType{}")) {
-                    String money = report.getPropertyAsString(moneys);
+                    String money = report.getPropertyAsString(moneys + 3);
                     on_site += Float.parseFloat(money);
                 }
             } else if (TypeCash.TRANSFER.getTitle().equals(typeCash)) {
@@ -329,36 +319,5 @@ public class IWaterActivity extends AppCompatActivity {
 
         return reportDay;
     }
-
-    @SuppressLint("NewApi")
-    public static boolean notificationInit(Context context, String text) {
-        Intent notificationIntent = new Intent(context, IWaterActivity.class);
-        notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-        notificationIntent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-
-        PendingIntent contentIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        notificationChannel = new NotificationChannel(CHANNEL_ID, "test", NotificationManager.IMPORTANCE_HIGH);
-        notificationChannel.enableLights(true);
-        notificationChannel.setLightColor(Color.GREEN);
-        notificationChannel.enableVibration(true);
-        notificationManager.createNotificationChannel(notificationChannel);
-
-        Notification.Builder builder = new Notification.Builder(context, CHANNEL_ID);
-        builder.setContentIntent(contentIntent)
-                .setSmallIcon(R.drawable.ic_notification_small)
-//                    .setColor(cntx.getResources().getColor(R.color.colorPrimary))
-                .setContentText(text) // Текст уведомления
-                .setContentTitle(context.getResources().getString(R.string.app_name))
-                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_square))
-                .setWhen(System.currentTimeMillis())
-                .setAutoCancel(true); // автоматически закрыть уведомление после нажатия
-
-        Notification notification = builder.build();
-
-        notificationManager.notify(NOTIFICATION_ID, notification);
-        return true;
-    }
-
 
 }

@@ -93,6 +93,7 @@
                     android:layout_gravity="center_vertical"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
+
             </LinearLayout>
 
             <LinearLayout
@@ -113,29 +114,40 @@
                     android:id="@+id/textView12"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"/>
+
             </LinearLayout>
 
-                <TextView
-                    android:id="@+id/textView13"
-                    android:layout_marginTop="80dp"
-                    android:layout_gravity="center_horizontal"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/lookAtMap"
-                    android:textColor="@color/look_at_map"
-                    android:textSize="14sp" />
+            <Button
+                android:id="@+id/btn_call_client"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center|center_horizontal"
+                android:layout_marginTop="80dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/gradient_button"
+                android:text="@string/callClient"
+                android:textColor="@color/lightGray" />
+
+            <TextView
+                android:id="@+id/textView13"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:text="@string/lookAtMap"
+                android:textColor="@color/look_at_map"
+                android:textSize="14sp" />
 
             <Button
                 android:id="@+id/button2"
-                android:layout_marginTop="30dp"
-                android:layout_marginBottom="10dp"
-                android:layout_gravity="center_horizontal"
-                android:background="@drawable/gradient_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="40dp"
+                android:layout_marginBottom="10dp"
+                android:background="@drawable/gradient_button"
+                android:text="@string/confirmOrder"
                 android:textColor="@color/white"
-                android:textSize="14sp"
-                android:text="@string/confirmOrder" />
+                android:textSize="14sp" />
 
         </LinearLayout>
     </ScrollView>

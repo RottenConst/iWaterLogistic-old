@@ -1,12 +1,10 @@
 package ru.iwater.yourwater.iwaterlogistic.ui.activities;
 
 import android.annotation.SuppressLint;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -21,7 +19,6 @@ import androidx.core.app.ActivityCompat;
 
 import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.domain.Order;
-import ru.iwater.yourwater.iwaterlogistic.ui.activities.map.MapActivity;
 import ru.iwater.yourwater.iwaterlogistic.utils.Helper;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
 
@@ -34,9 +31,6 @@ public class AboutOrder extends AppCompatActivity {
     private String orderTitle = "";//номер , дата, время, адрес заказа
     private String[] phones;//номера телефонов клиента
     private final Order order = new Order();
-    private String coord;
-    private String times;
-    private String period;
     private int position;
     //endregion
 
@@ -69,6 +63,7 @@ public class AboutOrder extends AppCompatActivity {
         TextView lookAtMapTV = findViewById(R.id.textView13);
         //кнопка Отгрузить заказ
         Button confirmOrderBt = findViewById(R.id.button2);
+        Button callClient = findViewById(R.id.btn_call_client);
         //endregion
 
         Intent intent = getIntent();
@@ -84,12 +79,9 @@ public class AboutOrder extends AppCompatActivity {
         order.setName(intent.getStringExtra("name"));
         order.setContact(intent.getStringExtra("contact"));
         order.setNotice(intent.getStringExtra("notice"));
+        order.setCoords(intent.getStringExtra("coords"));
         order.setStatus(intent.getStringExtra("status"));
         position = intent.getIntExtra("position", 0);
-
-        coord = intent.getStringExtra("coord");
-        times = intent.getStringExtra("times");
-        period = intent.getStringExtra("period");
 
         orderDataTV.setText(orderTitle);
 
@@ -115,18 +107,16 @@ public class AboutOrder extends AppCompatActivity {
 
         noteTV.setText(order.getNotice());
         //endregion
-
         //region просмотр адреса на картах
         lookAtMapTV.setOnClickListener(v -> {
-            Intent intent1 = new Intent(AboutOrder.this, MapActivity.class);
-            intent1.putExtra("coordinates", coord);
-            intent1.putExtra("times", times);
-            intent1.putExtra("period", period);
+            Intent intent1 = new Intent(Intent.ACTION_VIEW);
+            intent1.setData(Uri.parse("geo:" + order.getCoords()));
             startActivity(intent1);
         });
         //endregion
         if (order.getStatus().equals("1")) {
             confirmOrderBt.setVisibility(View.GONE);
+            lookAtMapTV.setVisibility(View.GONE);
         }
         //region отгрузка заказа
         confirmOrderBt.setOnClickListener(v -> {
@@ -137,6 +127,43 @@ public class AboutOrder extends AppCompatActivity {
             intent12.putExtra("cashb", order.getCash_b());
             intent12.putExtra("position", position);
             startActivity(intent12);
+        });
+
+        callClient.setOnClickListener(v -> {
+            if (!order.getContact().equals("")) {
+                if (order.getContact().contains(","))
+                    phones = order.getContact().split(",");
+                else if (order.getContact().contains(";"))
+                    phones = order.getContact().split(";");
+                else {
+                    phones = new String[1];
+                    phones[0] = order.getContact();
+                }
+            }
+
+            Intent intentCall = new Intent(Intent.ACTION_CALL);
+            if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(AboutOrder.this,
+                        new String[]{android.Manifest.permission.CALL_PHONE},
+                        MY_PERMISSIONS_REQUEST_CALL_PHONE);
+            } else {
+                final AlertDialog aboutDialog = new AlertDialog.Builder(this)
+                        .setTitle(R.string.makeCall)
+                        .setPositiveButton("ОК", (dialog, which) -> {
+                            if (intentCall.getData() != null) {
+                                if (ActivityCompat.checkSelfPermission(getApplicationContext(), android.Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                                    startActivity(intentCall);
+                                }
+                            }
+                        })
+                        .setNegativeButton("Отмена", (dialog, which) -> dialog.cancel())
+                        .setSingleChoiceItems(phones, -1, (dialog, item1) -> {
+                            if (phones != null)
+                                intentCall.setData(Uri.parse("tel:" + phones[item1]));
+                        }).create();
+
+                aboutDialog.show();
+            }
         });
         //endregion
 

@@ -137,13 +137,10 @@ public class ShipmentData extends AppCompatActivity {
         yorInfoIV.setVisibility(View.GONE);
         yorInfoTV.setVisibility(View.GONE);
 
-        Log.d("SHIPMENTS", "CASH = " + cash + " CASH_B =" + cash_b);
-
         String typeClient = null;
         SoapObject type = getTypeClient(getBaseContext(), order_id);
         if (type != null) {
             typeClient = type.getPropertyAsString("info_period");
-            Log.d("SHIPMENTS", "TYPE = " + typeClient );
         }
 
         if (typeClient != null && typeClient.contains("1")) {
@@ -156,11 +153,11 @@ public class ShipmentData extends AppCompatActivity {
                 cash_b = cash;
             }
             reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.NON_CASH);
-            Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+//            Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
         } else if (cash.equals("0.00") && cash_b != null) {
             radioCashGroup.setVisibility(View.GONE);
             reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.NON_CASH);
-            Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+//            Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
         }
 
         orderRow.setText(order);
@@ -173,7 +170,7 @@ public class ShipmentData extends AppCompatActivity {
                         cash = cash_b;
                     }
                     reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash), TypeCash.CASH);
-                    Log.d("report", "Type of cash " + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+//                    Log.d("report", "Type of cash " + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
                     break;
                 case R.id.radio_on_site:
                     comment.setText("Оплата на сайте, ");
@@ -181,7 +178,7 @@ public class ShipmentData extends AppCompatActivity {
                         cash_b = cash;
                     }
                     reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash), TypeCash.ON_SiTE);
-                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+//                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
                     break;
                 case R.id.radio_terminal:
                     comment.setText("Оплата через терминал, ");
@@ -189,7 +186,7 @@ public class ShipmentData extends AppCompatActivity {
                         cash_b = cash;
                     }
                     reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.ON_TERMINAL);
-                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+//                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
                     break;
                 case R.id.radio_transfer:
                     comment.setText("Оплата переводом, ");
@@ -197,7 +194,7 @@ public class ShipmentData extends AppCompatActivity {
                         cash_b = cash;
                     }
                     reportOrder = new ReportOrder(Integer.parseInt(order_id), Float.parseFloat(cash_b), TypeCash.TRANSFER);
-                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
+//                    Log.d("report", "Type of cash" + TypeCash.valueOf(reportOrder.getTypeCash().name()) + " " + reportOrder.getTypeCash().getTitle());
                     break;
             }
         });
@@ -570,9 +567,8 @@ public class ShipmentData extends AppCompatActivity {
         private final static String METHOD_NAME_ACCEEPT = "accept";
         private final static String NAMESPACE_ACCEEPT = "urn:authuser";
 
-//        private final static String URL = "http://iwatercrm.ru/iwater_api/driver/server.php?wsdl";
-//        private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php";
-        private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
+        private final static String URL = "http://dev.iwatercrm.ru/iwater_logistic/driver/server.php?wsdl";
+//        private final static String URL = "http://dev.iwatercrm.ru/iwater_api/driver/server.php?wsdl";
 
         private String[] error;
 
