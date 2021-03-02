@@ -362,15 +362,15 @@ public class FragmentOrders extends Fragment implements SwipeRefreshLayout.OnRef
         }
         sortOrder(orders);
         //удаление заказов
-//        ArrayList<Order> sortOrder = new ArrayList<>();
-//        for (int i = 0; i < orders.size() - 1; i++) {
-//            if(!orders.get(i).getId().equals(orders.get(i+1).getId())) {
-//                sortOrder.add(orders.get(i));
-//            }
-//        }
-//        sortOrder.add(orders.get(orders.size() - 1));
+        ArrayList<Order> sortOrder = new ArrayList<>();
+        for (int i = 0; i < orders.size() - 1; i++) {
+            if(!orders.get(i).getId().equals(orders.get(i+1).getId())) {
+                sortOrder.add(orders.get(i));
+            }
+        }
+        sortOrder.add(orders.get(orders.size() - 1));
 
-        return orders;
+        return sortOrder;
     }
 
     private void sortOrder(ArrayList<Order> orders) {

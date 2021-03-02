@@ -238,7 +238,7 @@ public class GeneralMap extends AppCompatActivity implements OnMapReadyCallback 
             }
         }
         sortOrder.add(orders.get(orders.size() - 1));
-        return orders;
+        return sortOrder;
     }
 
     private void sortOrder(ArrayList<Order> orders) {
