@@ -65,4 +65,5 @@
     <string name="general_map_text">Общая карта</string>
     <string name="completeOrder">Завершённые заказы</string>
     <string name="callClient">Звонок клиенту</string>
+    <string name="Copy_address">Скопировать адрес в буфер обмена</string>
 </resources>

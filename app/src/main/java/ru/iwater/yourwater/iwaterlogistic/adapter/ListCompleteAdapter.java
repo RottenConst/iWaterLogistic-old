@@ -69,14 +69,14 @@ public class ListCompleteAdapter extends RecyclerView.Adapter<ListCompleteAdapte
                 intent.putExtra("order_id", order.getId());
                 intent.putExtra("order", "№ " + order.getId() + ", " + order.getDate() + ", " + order.getTime() + ", " + order.getAddress());
                 intent.putExtra("coords", order.getCoords());
+                intent.putExtra("address", order.getAddress());
                 intent.putExtra("order_content", order.getOrder());
                 intent.putExtra("cash", order.getCash());
                 intent.putExtra("cashb", order.getCash_b());
-                intent.putExtra("time", order.getCash());
+                intent.putExtra("time", order.getTime());
                 intent.putExtra("name", order.getName());
                 intent.putExtra("contact", order.getContact());
                 intent.putExtra("notice", order.getNotice());
-                intent.putExtra("position", position);
                 intent.putExtra("status", order.getStatus());
                 v.getContext().startActivity(intent);
             });

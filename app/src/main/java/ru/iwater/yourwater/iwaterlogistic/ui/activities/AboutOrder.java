@@ -1,24 +1,36 @@
 package ru.iwater.yourwater.iwaterlogistic.ui.activities;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import ru.iwater.yourwater.iwaterlogistic.R;
 import ru.iwater.yourwater.iwaterlogistic.domain.Order;
+import ru.iwater.yourwater.iwaterlogistic.ui.activities.map.MapRoute;
 import ru.iwater.yourwater.iwaterlogistic.utils.Helper;
 import ru.iwater.yourwater.iwaterlogistic.utils.SharedPreferencesStorage;
 
@@ -32,6 +44,8 @@ public class AboutOrder extends AppCompatActivity {
     private String[] phones;//номера телефонов клиента
     private final Order order = new Order();
     private int position;
+    private String myPosition;
+    private LocationManager locationManager;
     //endregion
 
     @SuppressLint("SetTextI18n")
@@ -61,6 +75,8 @@ public class AboutOrder extends AppCompatActivity {
         TextView noteTV = findViewById(R.id.textView12);
         //кнопка Посмотреть на карте
         TextView lookAtMapTV = findViewById(R.id.textView13);
+        TextView tvCopyAddress = findViewById(R.id.tv_copy_address);
+        TextView tvCallNumbers = findViewById(R.id.tv_call_number);
         //кнопка Отгрузить заказ
         Button confirmOrderBt = findViewById(R.id.button2);
         Button callClient = findViewById(R.id.btn_call_client);
@@ -68,6 +84,7 @@ public class AboutOrder extends AppCompatActivity {
 
         Intent intent = getIntent();
         SharedPreferencesStorage.init(getApplicationContext());
+        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
 /////////////////////////////////////////////////////////////////////
         orderTitle = intent.getStringExtra("order");
@@ -78,10 +95,10 @@ public class AboutOrder extends AppCompatActivity {
         order.setCash_b(intent.getStringExtra("cashb"));
         order.setName(intent.getStringExtra("name"));
         order.setContact(intent.getStringExtra("contact"));
+        order.setTime(intent.getStringExtra("time"));
         order.setNotice(intent.getStringExtra("notice"));
-        order.setCoords(intent.getStringExtra("coords"));
         order.setStatus(intent.getStringExtra("status"));
-        position = intent.getIntExtra("position", 0);
+        order.setAddress(intent.getStringExtra("address"));
 
         orderDataTV.setText(orderTitle);
 
@@ -103,14 +120,25 @@ public class AboutOrder extends AppCompatActivity {
             iconCost.setImageResource(R.drawable.ic_baseline_monetization_on_24);
         } else costTV.setText("-");
 
-        contactsTV.setText(order.getName() + "\n" + order.getContact());
-
+        contactsTV.setText(order.getName() +";" + "\n" + order.getAddress() + ";");
+        tvCallNumbers.setText(order.getContact());
         noteTV.setText(order.getNotice());
         //endregion
+
+        tvCopyAddress.setOnClickListener(v -> {
+            ClipboardManager clipboard = (ClipboardManager) this.getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clip = ClipData.newPlainText("", order.getAddress());
+            clipboard.setPrimaryClip(clip);
+            Toast.makeText(this, "адресс скопирован", Toast.LENGTH_LONG).show();
+        });
+
         //region просмотр адреса на картах
         lookAtMapTV.setOnClickListener(v -> {
-            Intent intent1 = new Intent(Intent.ACTION_VIEW);
-            intent1.setData(Uri.parse("geo:" + order.getCoords()));
+            Intent intent1 = new Intent(AboutOrder.this, MapRoute.class);
+            intent1.putExtra("coordinates", order.getCoords());
+            intent1.putExtra("address", order.getAddress());
+            intent1.putExtra("time", order.getTime());
+            intent1.putExtra("origin", myPosition);
             startActivity(intent1);
         });
         //endregion
@@ -184,6 +212,30 @@ public class AboutOrder extends AppCompatActivity {
         //endregion
 
         return true;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        locationUpdate();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        locationManager.removeUpdates(locationListener);
+    }
+
+    private void locationUpdate() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+            return;
+        }
+        locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
+                1000 * 10, 10, locationListener);
+        locationManager.requestLocationUpdates(
+                LocationManager.NETWORK_PROVIDER, 1000 * 10, 10,
+                locationListener);
     }
 
     //нажатие по кнопке перехода назад, звонка и выхода
@@ -297,6 +349,45 @@ public class AboutOrder extends AppCompatActivity {
                 return;
             }
 
+        }
+    }
+
+    private LocationListener locationListener = new LocationListener() {
+        @Override
+        public void onLocationChanged(Location location) {
+            getLocation(location);
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+            if (ActivityCompat.checkSelfPermission(AboutOrder.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(AboutOrder.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(AboutOrder.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
+                return;
+            }
+            getLocation(locationManager.getLastKnownLocation(provider));
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+
+        }
+    };
+
+    private void getLocation(Location location) {
+        if (location == null)
+            return;
+
+        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)){
+            myPosition = location.getLatitude() + "," +location.getLongitude();
+            Log.d("location", myPosition);
+        } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)) {
+            myPosition = location.getLatitude() + "," +location.getLongitude();
+            Log.d("location", myPosition);
         }
     }
 }

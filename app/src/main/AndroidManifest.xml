@@ -53,6 +53,10 @@
             android:configChanges="keyboardHidden|orientation|screenSize"
             android:label="@string/map"
             />
+        <activity android:name=".ui.activities.map.MapRoute"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:label="@string/map"
+            />
 
         <activity android:name=".ui.activities.CompleteWayList" />
         <activity android:name=".ui.activities.Complete" />
